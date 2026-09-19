@@ -1,0 +1,46 @@
+### Отправка тестового лога (OTLP HTTP)
+POST http://localhost:4318/v1/logs
+Content-Type: application/json
+
+{
+  "resourceLogs": [{
+    "resource": {
+      "attributes": [{"key": "service.name", "value": {"stringValue": "goland-test-service"}}]
+    },
+    "scopeLogs": [{
+      "logRecords": [{
+        "timeUnixNano": "{{$timestamp}}000000",
+        "body": {"stringValue": "Привет из HTTP-клиента GoLand!"},
+        "attributes": [{"key": "log.severity", "value": {"stringValue": "INFO"}}]
+      }]
+    }]
+  }]
+}
+
+###
+
+### Отправка тестовой метрики (OTLP HTTP)
+POST http://localhost:4318/v1/metrics
+Content-Type: application/json
+
+{
+  "resourceMetrics": [{
+    "resource": {
+      "attributes": [{"key": "service.name", "value": {"stringValue": "goland-test-service"}}]
+    },
+    "scopeMetrics": [{
+      "metrics": [{
+        "name": "goland_clicks_total",
+        "description": "Тестовый счетчик из GoLand",
+        "sum": {
+          "dataPoints": [{
+            "asInt": "77",
+            "timeUnixNano": "{{$timestamp}}000000"
+          }],
+          "aggregationTemporality": 1,
+          "isMonotonic": true
+        }
+      }]
+    }]
+  }]
+}

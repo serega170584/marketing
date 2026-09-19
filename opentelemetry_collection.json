@@ -1,0 +1,70 @@
+{
+  "info": {
+    "_postman_id": "otel-test-collection-id",
+    "name": "OpenTelemetry OTLP Test",
+    "description": "Коллекция для проверки отправки метрик и логов в OpenTelemetry Collector по протоколу OTLP/HTTP.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Отправка тестового лога",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"resourceLogs\": [{\n    \"resource\": {\n      \"attributes\": [{\"key\": \"service.name\", \"value\": {\"stringValue\": \"postman-test-service\"}}]\n    },\n    \"scopeLogs\": [{\n      \"logRecords\": [{\n        \"timeUnixNano\": \"{{$timestamp}}000000000\",\n        \"body\": {\"stringValue\": \"Привет из Postman коллекции!\"},\n        \"attributes\": [{\"key\": \"log.severity\", \"value\": {\"stringValue\": \"INFO\"}}]\n      }]\n    }]\n  }]\n}"
+        },
+        "url": {
+          "raw": "http://localhost:4318/v1/logs",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "4318",
+          "path": [
+            "v1",
+            "logs"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Отправка тестовой метрики",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"resourceMetrics\": [{\n    \"resource\": {\n      \"attributes\": [{\"key\": \"service.name\", \"value\": {\"stringValue\": \"postman-test-service\"}}]\n    },\n    \"scopeMetrics\": [{\n      \"metrics\": [{\n        \"name\": \"postman_counter_total\",\n        \"description\": \"Тестовая метрика из Postman\",\n        \"sum\": {\n          \"dataPoints\": [{\n            \"asInt\": \"88\",\n            \"timeUnixNano\": \"{{$timestamp}}000000000\"\n          }],\n          \"aggregationTemporality\": 1,\n          \"isMonotonic\": true\n        }\n      }]\n    }]\n  }]\n}"
+        },
+        "url": {
+          "raw": "http://localhost:4318/v1/metrics",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "4318",
+          "path": [
+            "v1",
+            "metrics"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}

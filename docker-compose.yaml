@@ -1,0 +1,61 @@
+services:
+  # OpenTelemetry Collector
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    container_name: otel-collector
+    command: ["--config=/etc/otelcol/config.yaml"]
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otelcol/config.yaml:ro
+    ports:
+      - "4317:4317"   # OTLP gRPC receiver
+      - "4318:4318"   # OTLP HTTP receiver
+    restart: unless-stopped
+    depends_on:
+      - victoria-metrics
+      - victoria-logs
+
+  # VictoriaMetrics (Хранилище метрик)
+  victoria-metrics:
+    image: victoriametrics/victoria-metrics:latest
+    container_name: victoria-metrics
+    ports:
+      - "8428:8428"
+    volumes:
+      - vmdata:/vmdata
+    command:
+      - "--storageDataPath=/vmdata"
+      - "--httpListenAddr=:8428"
+    restart: unless-stopped
+
+  # VictoriaLogs (Хранилище логов)
+  victoria-logs:
+    image: victoriametrics/victoria-logs:latest
+    container_name: victoria-logs
+    ports:
+      - "9428:9428"
+    volumes:
+      - vldata:/vlogsdata
+    command:
+      - "--storageDataPath=/vlogsdata"
+      - "--httpListenAddr=:9428"
+    restart: unless-stopped
+
+  # Grafana (Визуализация)
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    dns:
+      - 8.8.8.8
+    volumes:
+      - grafanadata:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin # Пароль по умолчанию (смените при первом входе)
+      - GF_INSTALL_PLUGINS=victoriametrics-logs-datasource # Авто-установка плагина для VictoriaLogs
+    restart: unless-stopped
+
+volumes:
+  vmdata:
+  vldata:
+  grafanadata:
