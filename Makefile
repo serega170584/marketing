@@ -1,4 +1,4 @@
-.PHONY: help up down restart logs logs-all ps clean lint lint-fix fmt fmt-check generate migrate-up migrate-down
+.PHONY: help up down restart logs logs-all ps clean lint lint-fix fmt fmt-check generate migrate-up migrate-down migrate-create
 
 # Переменная для вызова docker compose (поддерживает как старый синтаксис, так и новый)
 DC = docker compose
@@ -52,3 +52,7 @@ migrate-up: ## Применить все миграции базы данных 
 
 migrate-down: ## Откатить последнюю миграцию базы данных (Cobra migrator)
 	go run cmd/migrator/main.go down
+
+migrate-create: ## Создать новую пару файлов миграций (Использование: make migrate-create NAME=имя_миграции)
+	@if [ -z "$(NAME)" ]; then echo "Error: NAME variable is required. Example: make migrate-create NAME=create_users_table"; exit 1; fi
+	go run cmd/migrator/main.go create $(NAME)

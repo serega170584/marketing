@@ -8,6 +8,7 @@ require (
 	github.com/golang-migrate/migrate/v4 v4.20.1
 	github.com/oapi-codegen/runtime v1.7.0
 	github.com/segmentio/kafka-go v0.4.51
+	github.com/spf13/cobra v1.10.2
 )
 
 require (
@@ -15,6 +16,7 @@ require (
 	github.com/go-openapi/jsonpointer v0.22.5 // indirect
 	github.com/go-openapi/swag/jsonname v0.25.5 // indirect
 	github.com/google/uuid v1.6.0 // indirect
+	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/klauspost/compress v1.17.7 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/lib/pq v1.10.9 // indirect
@@ -22,5 +24,6 @@ require (
 	github.com/oasdiff/yaml3 v0.0.14 // indirect
 	github.com/pierrec/lz4/v4 v4.1.16 // indirect
 	github.com/santhosh-tekuri/jsonschema/v6 v6.0.3 // indirect
+	github.com/spf13/pflag v1.0.9 // indirect
 	golang.org/x/text v0.38.0 // indirect
 )
