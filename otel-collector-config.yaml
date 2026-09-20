@@ -15,7 +15,7 @@ processors:
 exporters:
   # Нативный прием OTLP метрик в VictoriaMetrics
   otlphttp/victoriametrics:
-    endpoint: "http://victoria-metrics:8428/opentelemetry/v1/metrics"
+    endpoint: "http://victoria-metrics:8428/opentelemetry"
     tls:
       insecure: true
 
