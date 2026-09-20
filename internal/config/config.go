@@ -4,7 +4,6 @@ import (
 	"os"
 )
 
-// Config содержит все настройки приложения
 type Config struct {
 	Server ServerConfig
 	Kafka  KafkaConfig
@@ -20,11 +19,7 @@ type KafkaConfig struct {
 	GroupID string
 }
 
-// LoadConfig читает переменные окружения и возвращает заполненную структуру
 func LoadConfig() *Config {
-	// В реальном проекте здесь обычно вызывают godotenv.Load(),
-	// чтобы подгрузить переменные из .env файла.
-
 	return &Config{
 		Server: ServerConfig{
 			Addr: getEnv("SERVER_ADDR", ":8080"),
@@ -37,7 +32,6 @@ func LoadConfig() *Config {
 	}
 }
 
-// Хелпер для установки дефолтных значений, если переменная пустая
 func getEnv(key, defaultValue string) string {
 	if value, exists := os.LookupEnv(key); exists {
 		return value

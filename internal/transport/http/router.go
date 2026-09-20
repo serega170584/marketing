@@ -9,20 +9,16 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 )
 
-// NewRouter собирает роутер, подключает middleware и эндпоинты
 func NewRouter(userHandler *handler.UserHandler) http.Handler {
 	r := chi.NewRouter()
 
-	// Стандартные middleware для логирования и безопасности
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 
-	// Системные эндпоинты
 	r.Get("/ping", func(w http.ResponseWriter, r *http.Request) {
-		_, _ = w.Write([]byte("pong")) // Исправлено: явно игнорируем ошибку для errcheck
+		_, _ = w.Write([]byte("pong"))
 	})
 
-	// Группировка API маршрутов
 	r.Route("/api/v1", func(r chi.Router) {
 		r.Post("/users", userHandler.Create)
 		r.Get("/users", userHandler.Get)

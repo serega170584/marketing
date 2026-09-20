@@ -14,7 +14,7 @@ import (
 	"github.com/segmentio/kafka-go"
 
 	"marketing/internal/config"
-	transportHTTP "marketing/internal/transport/http" // Импортируем наш HTTP транспорт
+	transportHTTP "marketing/internal/transport/http"
 	"marketing/internal/transport/http/handler"
 )
 
@@ -24,7 +24,6 @@ type App struct {
 }
 
 func NewApp(cfg *config.Config) *App {
-	// 1. Инициализация Kafka Reader
 	reader := kafka.NewReader(kafka.ReaderConfig{
 		Brokers:  []string{cfg.Kafka.Broker},
 		Topic:    cfg.Kafka.Topic,
@@ -33,14 +32,12 @@ func NewApp(cfg *config.Config) *App {
 		MaxBytes: 10e6,
 	})
 
-	// 2. Инициализация HTTP хендлеров и роутера
 	userHandler := handler.NewUserHandler()
-	router := transportHTTP.NewRouter(userHandler) // Передаем хендлеры в роутер
+	router := transportHTTP.NewRouter(userHandler)
 
-	// 3. Настройка HTTP-сервера
 	srv := &http.Server{
 		Addr:              cfg.Server.Addr,
-		Handler:           router, // Подставляем собранный роутер
+		Handler:           router,
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 
@@ -56,46 +53,42 @@ func (a *App) Run() {
 
 	var wg sync.WaitGroup
 
-	// Запуск Kafka консьюмера в фоне
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		log.Println("Запуск Kafka консьюмера...")
+		log.Println("Starting Kafka consumer...")
 		for {
 			msg, err := a.kafkaReader.ReadMessage(ctx)
 			if err != nil {
 				if errors.Is(err, context.Canceled) {
-					log.Println("Прекращаем чтение из Kafka...")
+					log.Println("Stopping Kafka message consumption...")
 					return
 				}
-				log.Printf("Ошибка чтения из Kafka: %v", err)
+				log.Printf("Error reading from Kafka: %v", err)
 				continue
 			}
-			log.Printf("Получено сообщение: %s", string(msg.Value))
+			log.Printf("Received message: %s", string(msg.Value))
 		}
 	}()
 
-	// Запуск HTTP сервера в фоне
 	go func() {
-		log.Printf("Запуск HTTP сервера на %s", a.httpServer.Addr)
+		log.Printf("Starting HTTP server on %s", a.httpServer.Addr)
 		if err := a.httpServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			log.Fatalf("Ошибка HTTP сервера: %v", err)
+			log.Fatalf("HTTP server error: %v", err)
 		}
 	}()
 
 	<-ctx.Done()
-	log.Println("Получен сигнал остановки. Инициируем Graceful Shutdown...")
+	log.Println("Shutdown signal received. Initiating graceful shutdown...")
 
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	// Плавный останов HTTP
 	if err := a.httpServer.Shutdown(shutdownCtx); err != nil {
-		log.Printf("Ошибка при остановке HTTP: %v", err)
+		log.Printf("Error shutting down HTTP server: %v", err)
 	}
 
-	// Ожидание завершения обработки текущих сообщений Kafka
-	log.Println("Ожидаем завершения работы воркеров Kafka...")
+	log.Println("Waiting for Kafka workers to finish...")
 	ch := make(chan struct{})
 	go func() {
 		wg.Wait()
@@ -104,15 +97,14 @@ func (a *App) Run() {
 
 	select {
 	case <-ch:
-		log.Println("Все воркеры Kafka успешно завершили работу.")
+		log.Println("All Kafka workers finished successfully.")
 	case <-shutdownCtx.Done():
-		log.Println("Превышен лимит времени ожидания воркеров Kafka!")
+		log.Println("Kafka workers shutdown timeout exceeded!")
 	}
 
-	// Закрытие соединения с Kafka
 	if err := a.kafkaReader.Close(); err != nil {
-		log.Printf("Ошибка при закрытии Kafka: %v", err)
+		log.Printf("Error closing Kafka reader: %v", err)
 	}
 
-	log.Println("Приложение полностью остановлено.")
+	log.Println("Application stopped completely.")
 }
