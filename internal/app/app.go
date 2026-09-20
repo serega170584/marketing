@@ -39,8 +39,9 @@ func NewApp(cfg *config.Config) *App {
 
 	// 3. Настройка HTTP-сервера
 	srv := &http.Server{
-		Addr:    cfg.Server.Addr,
-		Handler: router, // Подставляем собранный роутер
+		Addr:              cfg.Server.Addr,
+		Handler:           router, // Подставляем собранный роутер
+		ReadHeaderTimeout: 5 * time.Second,
 	}
 
 	return &App{
