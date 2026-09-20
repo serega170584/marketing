@@ -1,0 +1,16 @@
+run:
+  timeout: 5m
+
+linters:
+  enable-all: false
+  # Здесь мы включаем только самые важные базовые линтеры
+  enable:
+    - errcheck
+    - gosimple
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+  # Полностью отключаем депгард, чтобы он не ругался на импорты
+  disable:
+    - depguard
