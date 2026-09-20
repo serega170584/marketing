@@ -1,5 +1,4 @@
 services:
-  # OpenTelemetry Collector
   otel-collector:
     image: otel/opentelemetry-collector-contrib:latest
     container_name: otel-collector
@@ -7,14 +6,13 @@ services:
     volumes:
       - ./otel-collector-config.yaml:/etc/otelcol/config.yaml:ro
     ports:
-      - "4317:4317"   # OTLP gRPC receiver
-      - "4318:4318"   # OTLP HTTP receiver
+      - "4317:4317"
+      - "4318:4318"
     restart: unless-stopped
     depends_on:
       - victoria-metrics
       - victoria-logs
 
-  # VictoriaMetrics (Хранилище метрик)
   victoria-metrics:
     image: victoriametrics/victoria-metrics:latest
     container_name: victoria-metrics
@@ -27,7 +25,6 @@ services:
       - "--httpListenAddr=:8428"
     restart: unless-stopped
 
-  # VictoriaLogs (Хранилище логов)
   victoria-logs:
     image: victoriametrics/victoria-logs:latest
     container_name: victoria-logs
@@ -40,7 +37,6 @@ services:
       - "--httpListenAddr=:9428"
     restart: unless-stopped
 
-  # Grafana (Визуализация)
   grafana:
     image: grafana/grafana:latest
     container_name: grafana
@@ -51,11 +47,62 @@ services:
     volumes:
       - grafanadata:/var/lib/grafana
     environment:
-      - GF_SECURITY_ADMIN_PASSWORD=admin # Пароль по умолчанию (смените при первом входе)
-      - GF_INSTALL_PLUGINS=victoriametrics-logs-datasource # Авто-установка плагина для VictoriaLogs
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_INSTALL_PLUGINS=victoriametrics-logs-datasource
     restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: marketing-db
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=marketing
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  kafka:
+    image: confluentinc/cp-kafka:7.6.0
+    container_name: marketing-kafka
+    ports:
+      - "9092:9092"
+    environment:
+      - KAFKA_NODE_ID=1
+      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
+      - KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS=0
+      - KAFKA_TRANSACTION_STATE_LOG_MIN_ISR=1
+      - KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR=1
+      - KAFKA_PROCESS_ROLES=broker,controller
+      - KAFKA_CONTROLLER_QUORUM_VOTERS=1@kafka:29093
+      - KAFKA_LISTENERS=PLAINTEXT://0.0.0.0:29092,CONTROLLER://0.0.0.0:29093,PLAINTEXT_HOST://0.0.0.0:9092
+      - KAFKA_INTER_BROKER_LISTENER_NAME=PLAINTEXT
+      - KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_LOG_DIRS=/var/lib/kafka/data
+      - CLUSTER_ID=MkU3OEVBNTcwNTg2NEYyQk
+    volumes:
+      - kafkadata:/var/lib/kafka/data
+    restart: unless-stopped
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: marketing-kafka-ui
+    ports:
+      - "8000:8080"
+    environment:
+      - KAFKA_CLUSTERS_0_NAME=marketing-cluster
+      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:29092
+    restart: unless-stopped
+    depends_on:
+      - kafka
 
 volumes:
   vmdata:
   vldata:
   grafanadata:
+  pgdata:
+  kafkadata:
