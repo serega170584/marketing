@@ -1,4 +1,4 @@
-.PHONY: help up down restart logs logs-all ps clean lint lint-fix fmt fmt-check
+.PHONY: help up down restart logs logs-all ps clean lint lint-fix fmt fmt-check generate
 
 # Переменная для вызова docker compose (поддерживает как старый синтаксис, так и новый)
 DC = docker compose
@@ -26,6 +26,9 @@ ps: ## Статус запущенных контейнеров и их порт
 
 clean: ## Остановить стек и ПОЛНОСТЬЮ удалить все сохраненные данные (volumes)
 	$(DC) down -v
+
+generate: ## Сгенерировать код по спецификации OpenAPI (oapi-codegen)
+	go generate ./...
 
 fmt: ## Автоматически отформатировать весь проект (go fmt)
 	go fmt ./...
