@@ -3,6 +3,7 @@ package http
 import (
 	"net/http"
 
+	"marketing/internal/transport/http/api"
 	"marketing/internal/transport/http/handler"
 
 	"github.com/go-chi/chi/v5"
@@ -19,10 +20,8 @@ func NewRouter(userHandler *handler.UserHandler) http.Handler {
 		_, _ = w.Write([]byte("pong"))
 	})
 
-	r.Route("/api/v1", func(r chi.Router) {
-		r.Post("/users", userHandler.Create)
-		r.Get("/users", userHandler.Get)
+	return api.HandlerWithOptions(userHandler, api.ChiServerOptions{
+		BaseRouter: r,
+		BaseURL:    "/api/v1",
 	})
-
-	return r
 }
