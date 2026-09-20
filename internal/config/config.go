@@ -7,6 +7,7 @@ import (
 type Config struct {
 	Server ServerConfig
 	Kafka  KafkaConfig
+	DB     DBConfig
 }
 
 type ServerConfig struct {
@@ -19,6 +20,10 @@ type KafkaConfig struct {
 	GroupID string
 }
 
+type DBConfig struct {
+	URL string
+}
+
 func LoadConfig() *Config {
 	return &Config{
 		Server: ServerConfig{
@@ -28,6 +33,9 @@ func LoadConfig() *Config {
 			Broker:  getEnv("KAFKA_BROKER", "localhost:9092"),
 			Topic:   getEnv("KAFKA_TOPIC", "user-events"),
 			GroupID: getEnv("KAFKA_GROUP_ID", "my-service-group"),
+		},
+		DB: DBConfig{
+			URL: getEnv("DB_URL", "postgres://postgres:postgres@localhost:5432/marketing?sslmode=disable"),
 		},
 	}
 }

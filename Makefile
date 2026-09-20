@@ -1,4 +1,4 @@
-.PHONY: help up down restart logs logs-all ps clean lint lint-fix fmt fmt-check generate
+.PHONY: help up down restart logs logs-all ps clean lint lint-fix fmt fmt-check generate migrate-up migrate-down
 
 # Переменная для вызова docker compose (поддерживает как старый синтаксис, так и новый)
 DC = docker compose
@@ -46,3 +46,9 @@ lint: ## Запустить проверку кода с помощью golangci
 
 lint-fix: fmt ## Запустить форматирование и исправить доступные ошибки линтера
 	golangci-lint run --fix ./...
+
+migrate-up: ## Применить все миграции базы данных (Cobra migrator)
+	go run cmd/migrator/main.go up
+
+migrate-down: ## Откатить последнюю миграцию базы данных (Cobra migrator)
+	go run cmd/migrator/main.go down
