@@ -1,4 +1,4 @@
-.PHONY: help up down restart logs ps clean
+.PHONY: help up down restart logs logs-all ps clean lint lint-fix fmt fmt-check
 
 # Переменная для вызова docker compose (поддерживает как старый синтаксис, так и новый)
 DC = docker compose
@@ -26,3 +26,20 @@ ps: ## Статус запущенных контейнеров и их порт
 
 clean: ## Остановить стек и ПОЛНОСТЬЮ удалить все сохраненные данные (volumes)
 	$(DC) down -v
+
+fmt: ## Автоматически отформатировать весь проект (go fmt)
+	go fmt ./...
+
+fmt-check: ## Проверить, весь ли код отформатирован (без изменения файлов)
+	@if [ -n "$$(gofmt -l .)" ]; then \
+		echo "Следующие файлы не отформатированы:"; \
+		gofmt -l .; \
+		exit 1; \
+	fi
+	@echo "Весь код успешно отформатирован!"
+
+lint: ## Запустить проверку кода с помощью golangci-lint
+	golangci-lint run ./...
+
+lint-fix: fmt ## Запустить форматирование и исправить доступные ошибки линтера
+	golangci-lint run --fix ./...
