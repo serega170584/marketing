@@ -15,4 +15,27 @@ linters:
     - nakedret      # Запрещает «голые» возвраты (naked returns) в длинных функциях
     - noctx         # Проверяет, что HTTP-запросы создаются с контекстом (http.NewRequestWithContext)
     - prealloc      # Находит слайсы, для которых можно заранее выделить память через make([]T, 0, len)
+    - wsl_v5
+    - gocyclo
+    - gocognit
+    - lll
+    - nestif
+    - prealloc
+    - asciicheck
+    - contextcheck
+    - nilerr
+    - noctx
+    - rowserrcheck
+    - sqlclosecheck
+    - unconvert
+    - exhaustive
+    - exhaustruct_v5
+    - forcetypeassert
+    - gochecknoglobals
+    - paralleltest
+  settings:
+    wsl_v5:
+      allow-first-in-block: true
+      allow-whole-block: false
+      branch-max-lines: 2
 version: 2

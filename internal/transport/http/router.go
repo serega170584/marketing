@@ -10,6 +10,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 )
 
+//nolint:exhaustruct_v5
 func NewRouter(userHandler *handler.UserHandler) http.Handler {
 	r := chi.NewRouter()
 

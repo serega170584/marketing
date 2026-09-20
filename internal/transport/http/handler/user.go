@@ -20,6 +20,7 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
 		_ = json.NewEncoder(w).Encode(api.ErrorResponse{Error: "Invalid request payload"})
+
 		return
 	}
 
@@ -48,6 +49,7 @@ func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request, id int)
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
 		_ = json.NewEncoder(w).Encode(api.ErrorResponse{Error: "Invalid request payload"})
+
 		return
 	}
 
@@ -55,6 +57,7 @@ func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request, id int)
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusNotFound) // Fixed: removed the undefined slice header syntax
 		_ = json.NewEncoder(w).Encode(api.ErrorResponse{Error: "User not found"})
+
 		return
 	}
 

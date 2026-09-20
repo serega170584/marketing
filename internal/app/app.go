@@ -23,6 +23,7 @@ type App struct {
 	kafkaReader *kafka.Reader
 }
 
+//nolint:exhaustruct_v5
 func NewApp(cfg *config.Config) *App {
 	reader := kafka.NewReader(kafka.ReaderConfig{
 		Brokers:  []string{cfg.Kafka.Broker},
@@ -53,10 +54,9 @@ func (a *App) Run() {
 
 	var wg sync.WaitGroup
 
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	wg.Go(func() {
 		log.Println("Starting Kafka consumer...")
+
 		for {
 			msg, err := a.kafkaReader.ReadMessage(ctx)
 			if err != nil {
@@ -64,15 +64,19 @@ func (a *App) Run() {
 					log.Println("Stopping Kafka message consumption...")
 					return
 				}
+
 				log.Printf("Error reading from Kafka: %v", err)
+
 				continue
 			}
+
 			log.Printf("Received message: %s", string(msg.Value))
 		}
-	}()
+	})
 
 	go func() {
 		log.Printf("Starting HTTP server on %s", a.httpServer.Addr)
+
 		if err := a.httpServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			log.Fatalf("HTTP server error: %v", err)
 		}
@@ -89,7 +93,9 @@ func (a *App) Run() {
 	}
 
 	log.Println("Waiting for Kafka workers to finish...")
+
 	ch := make(chan struct{})
+
 	go func() {
 		wg.Wait()
 		close(ch)
