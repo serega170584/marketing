@@ -17,6 +17,7 @@ import (
 	"marketing/internal/config"
 )
 
+//nolint:exhaustruct_v5,gosec
 func main() {
 	var rootCmd = &cobra.Command{
 		Use:   "migrator",
@@ -28,16 +29,28 @@ func main() {
 		Short: "Apply all pending migrations",
 		Run: func(cmd *cobra.Command, args []string) {
 			m := initMigrator()
-			defer m.Close()
+			defer func() {
+				srcErr, dbErr := m.Close()
+				if srcErr != nil {
+					log.Printf("Migration source close error: %v", srcErr)
+				}
+
+				if dbErr != nil {
+					log.Printf("Migration database close error: %v", dbErr)
+				}
+			}()
 
 			log.Println("Applying database migrations...")
+
 			if err := m.Up(); err != nil {
 				if errors.Is(err, migrate.ErrNoChange) {
 					log.Println("Database schema is already up to date.")
 					return
 				}
+
 				log.Fatalf("Failed to apply migrations: %v", err)
 			}
+
 			log.Println("Migrations applied successfully!")
 		},
 	}
@@ -47,16 +60,28 @@ func main() {
 		Short: "Roll back the last migration",
 		Run: func(cmd *cobra.Command, args []string) {
 			m := initMigrator()
-			defer m.Close()
+			defer func() {
+				srcErr, dbErr := m.Close()
+				if srcErr != nil {
+					log.Printf("Migration source close error: %v", srcErr)
+				}
+
+				if dbErr != nil {
+					log.Printf("Migration database close error: %v", dbErr)
+				}
+			}()
 
 			log.Println("Rolling back the last database migration...")
+
 			if err := m.Down(); err != nil {
 				if errors.Is(err, migrate.ErrNoChange) {
 					log.Println("No migrations to roll back.")
 					return
 				}
+
 				log.Fatalf("Failed to roll back migrations: %v", err)
 			}
+
 			log.Println("Migration rolled back successfully!")
 		},
 	}
@@ -105,10 +130,12 @@ func initMigrator() *migrate.Migrate {
 	return m
 }
 
+//nolint:gosec
 func createEmptyFile(path string) {
 	file, err := os.Create(path)
 	if err != nil {
 		log.Fatalf("Failed to create file %s: %v", path, err)
 	}
+
 	_ = file.Close()
 }
