@@ -28,9 +28,6 @@ type DBConfig struct {
 }
 
 func LoadConfig() *Config {
-	// 2. Загружаем файл .env.
-	// Если файла нет, функция вернет ошибку, но мы можем просто вывести предупреждение,
-	// так как переменные могут быть заданы напрямую в самой системе (например, в Docker/Kubernetes).
 	if err := godotenv.Load(); err != nil {
 		log.Println("Предупреждение: файл .env не найден, используются системные переменные или значения по умолчанию")
 	}
@@ -54,5 +51,6 @@ func getEnv(key, defaultValue string) string {
 	if value, exists := os.LookupEnv(key); exists {
 		return value
 	}
+
 	return defaultValue
 }
