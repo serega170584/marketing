@@ -1,7 +1,10 @@
 package config
 
 import (
+	"log"
 	"os"
+
+	"github.com/joho/godotenv"
 )
 
 type Config struct {
@@ -25,6 +28,13 @@ type DBConfig struct {
 }
 
 func LoadConfig() *Config {
+	// 2. Загружаем файл .env.
+	// Если файла нет, функция вернет ошибку, но мы можем просто вывести предупреждение,
+	// так как переменные могут быть заданы напрямую в самой системе (например, в Docker/Kubernetes).
+	if err := godotenv.Load(); err != nil {
+		log.Println("Предупреждение: файл .env не найден, используются системные переменные или значения по умолчанию")
+	}
+
 	return &Config{
 		Server: ServerConfig{
 			Addr: getEnv("SERVER_ADDR", ":8080"),
@@ -44,6 +54,5 @@ func getEnv(key, defaultValue string) string {
 	if value, exists := os.LookupEnv(key); exists {
 		return value
 	}
-
 	return defaultValue
 }

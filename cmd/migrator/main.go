@@ -11,6 +11,7 @@ import (
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 	_ "github.com/golang-migrate/migrate/v4/source/iofs"
 	"github.com/spf13/cobra"
 

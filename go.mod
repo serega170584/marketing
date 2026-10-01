@@ -6,6 +6,7 @@ require (
 	github.com/getkin/kin-openapi v0.149.0
 	github.com/go-chi/chi/v5 v5.3.2
 	github.com/golang-migrate/migrate/v4 v4.20.1
+	github.com/joho/godotenv v1.5.1
 	github.com/oapi-codegen/runtime v1.7.0
 	github.com/segmentio/kafka-go v0.4.51
 	github.com/spf13/cobra v1.10.2
