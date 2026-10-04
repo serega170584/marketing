@@ -1,7 +1,7 @@
 openapi: 3.0.0
 info:
-  title: Marketing User API
-  description: API for managing users within the marketing microservice.
+  title: Marketing User & Order API
+  description: API for managing users and orders within the marketing microservice.
   version: 1.0.0
 
 servers:
@@ -9,6 +9,7 @@ servers:
     description: Local development server
 
 paths:
+  # === USERS ENDPOINTS ===
   /users:
     post:
       summary: Create a new user
@@ -77,6 +78,75 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
+  # === ORDERS ENDPOINTS ===
+  /orders:
+    post:
+      summary: Create a new order
+      operationId: createOrder
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrderRequest'
+      responses:
+        '201':
+          description: Order successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateOrderResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    get:
+      summary: Get order list
+      operationId: getOrders
+      responses:
+        '200':
+          description: Successfully fetched order list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OrderResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /orders/{id}:
+    put:
+      summary: Update an existing order by ID
+      operationId: updateOrder
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The unique identifier of the order
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateOrderRequest'
+      responses:
+        '200':
+          description: Order successfully updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
 components:
   responses:
     BadRequestError:
@@ -101,6 +171,7 @@ components:
             $ref: '#/components/schemas/ErrorResponse'
 
   schemas:
+    # === USER SCHEMAS ===
     CreateUserRequest:
       type: object
       required:
@@ -160,6 +231,71 @@ components:
           format: email
           example: john.doe@example.com
 
+    # === ORDER SCHEMAS ===
+    CreateOrderRequest:
+      type: object
+      required:
+        - user_id
+        - total_amount
+      properties:
+        user_id:
+          type: integer
+          example: 1
+        total_amount:
+          type: number
+          format: float
+          example: 99.99
+
+    CreateOrderResponse:
+      type: object
+      required:
+        - status
+        - message
+      properties:
+        status:
+          type: string
+          example: success
+        message:
+          type: string
+          example: Order created
+
+    UpdateOrderRequest:
+      type: object
+      required:
+        - status
+        - total_amount
+      properties:
+        status:
+          type: string
+          example: processing
+        total_amount:
+          type: number
+          format: float
+          example: 120.50
+
+    OrderResponse:
+      type: object
+      required:
+        - id
+        - user_id
+        - status
+        - total_amount
+      properties:
+        id:
+          type: integer
+          example: 42
+        user_id:
+          type: integer
+          example: 1
+        status:
+          type: string
+          example: pending
+        total_amount:
+          type: number
+          format: float
+          example: 99.99
+
+    # === SYSTEM SCHEMAS ===
     ErrorResponse:
       type: object
       required:

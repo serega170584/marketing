@@ -2,16 +2,20 @@ package handler
 
 import (
 	"encoding/json"
+	"marketing/internal/infrastructure/database"
 	"net/http"
 
 	"marketing/internal/transport/http/api"
 )
 
 type UserHandler struct {
+	pgConn *database.Postgres
 }
 
-func NewUserHandler() *UserHandler {
-	return &UserHandler{}
+func NewUserHandler(pgConn *database.Postgres) *UserHandler {
+	return &UserHandler{
+		pgConn: pgConn,
+	}
 }
 
 func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {

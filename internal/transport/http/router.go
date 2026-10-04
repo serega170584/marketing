@@ -1,6 +1,7 @@
 package http
 
 import (
+	"marketing/internal/infrastructure/database"
 	"net/http"
 
 	"marketing/internal/transport/http/api"
@@ -10,8 +11,16 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 )
 
+type ApiServer struct {
+	*handler.UserHandler
+	*handler.OrderHandler
+}
+
 //nolint:exhaustruct_v5
-func NewRouter(userHandler *handler.UserHandler) http.Handler {
+func newRouter(
+	userHandler *handler.UserHandler,
+	orderHandler *handler.OrderHandler,
+) http.Handler {
 	r := chi.NewRouter()
 
 	r.Use(middleware.Logger)
@@ -21,8 +30,22 @@ func NewRouter(userHandler *handler.UserHandler) http.Handler {
 		_, _ = w.Write([]byte("pong"))
 	})
 
-	return api.HandlerWithOptions(userHandler, api.ChiServerOptions{
+	apiServer := &ApiServer{
+		UserHandler:  userHandler,
+		OrderHandler: orderHandler,
+	}
+
+	return api.HandlerWithOptions(apiServer, api.ChiServerOptions{
 		BaseRouter: r,
 		BaseURL:    "/api/v1",
 	})
+}
+
+func GetRouter(
+	pgConn *database.Postgres,
+) http.Handler {
+	userHandler := handler.NewUserHandler(pgConn)
+	orderHandler := handler.NewOrderHandler(pgConn)
+
+	return newRouter(userHandler, orderHandler)
 }

@@ -3,7 +3,9 @@ package app
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
+	"marketing/internal/infrastructure/database"
 	"net/http"
 	"os"
 	"os/signal"
@@ -11,30 +13,27 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/segmentio/kafka-go"
-
 	"marketing/internal/config"
 	transportHTTP "marketing/internal/transport/http"
-	"marketing/internal/transport/http/handler"
+
+	_ "github.com/jackc/pgx/v5"
 )
 
 type App struct {
-	httpServer  *http.Server
-	kafkaReader *kafka.Reader
+	httpServer *http.Server
+	pgConn     *database.Postgres
 }
 
 //nolint:exhaustruct_v5
-func NewApp(cfg *config.Config) *App {
-	reader := kafka.NewReader(kafka.ReaderConfig{
-		Brokers:  []string{cfg.Kafka.Broker},
-		Topic:    cfg.Kafka.Topic,
-		GroupID:  cfg.Kafka.GroupID,
-		MinBytes: 10e3,
-		MaxBytes: 10e6,
-	})
+func NewApp(cfg *config.Config) (*App, error) {
+	pgConn, err := database.New(cfg.DB)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create database connection: %w", err)
+	}
 
-	userHandler := handler.NewUserHandler()
-	router := transportHTTP.NewRouter(userHandler)
+	log.Println("Database connection established successfully")
+
+	router := transportHTTP.GetRouter(pgConn)
 
 	srv := &http.Server{
 		Addr:              cfg.Server.Addr,
@@ -43,36 +42,14 @@ func NewApp(cfg *config.Config) *App {
 	}
 
 	return &App{
-		httpServer:  srv,
-		kafkaReader: reader,
-	}
+		httpServer: srv,
+		pgConn:     pgConn,
+	}, nil
 }
 
 func (a *App) Run() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
-
-	var wg sync.WaitGroup
-
-	wg.Go(func() {
-		log.Println("Starting Kafka consumer...")
-
-		for {
-			msg, err := a.kafkaReader.ReadMessage(ctx)
-			if err != nil {
-				if errors.Is(err, context.Canceled) {
-					log.Println("Stopping Kafka message consumption...")
-					return
-				}
-
-				log.Printf("Error reading from Kafka: %v", err)
-
-				continue
-			}
-
-			log.Printf("Received message: %s", string(msg.Value))
-		}
-	})
 
 	go func() {
 		log.Printf("Starting HTTP server on %s", a.httpServer.Addr)
@@ -88,11 +65,25 @@ func (a *App) Run() {
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	if err := a.httpServer.Shutdown(shutdownCtx); err != nil {
-		log.Printf("Error shutting down HTTP server: %v", err)
-	}
+	var wg sync.WaitGroup
 
-	log.Println("Waiting for Kafka workers to finish...")
+	wg.Go(
+		func() {
+			log.Println("Waiting for HTTP server to shutdown...")
+
+			if err := a.httpServer.Shutdown(shutdownCtx); err != nil {
+				log.Printf("Error shutting down HTTP server: %v", err)
+			}
+		},
+	)
+
+	wg.Go(
+		func() {
+			log.Println("Waiting for database connection to close...")
+
+			a.pgConn.Close()
+		},
+	)
 
 	ch := make(chan struct{})
 
@@ -103,13 +94,9 @@ func (a *App) Run() {
 
 	select {
 	case <-ch:
-		log.Println("All Kafka workers finished successfully.")
+		log.Println("All shutdown tasks finished.")
 	case <-shutdownCtx.Done():
-		log.Println("Kafka workers shutdown timeout exceeded!")
-	}
-
-	if err := a.kafkaReader.Close(); err != nil {
-		log.Printf("Error closing Kafka reader: %v", err)
+		log.Println("Shutdown timeout exceeded!")
 	}
 
 	log.Println("Application stopped completely.")

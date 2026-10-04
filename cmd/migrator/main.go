@@ -118,7 +118,11 @@ func main() {
 }
 
 func initMigrator() *migrate.Migrate {
-	cfg := config.LoadConfig()
+	cfg, err := config.LoadConfig()
+	if err != nil {
+		log.Fatalf("Failed to load config: %v", err)
+	}
+
 	if cfg.DB.URL == "" {
 		log.Fatal("DB_URL environment variable is not set")
 	}
