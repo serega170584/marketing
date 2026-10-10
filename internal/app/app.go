@@ -54,6 +54,7 @@ func NewApp(cfg *config.Config) (*App, error) {
 	return &App{
 		httpServer: srv,
 		pgConn:     pgConn,
+		logger:     customLogger,
 	}, nil
 }
 
