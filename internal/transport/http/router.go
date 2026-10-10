@@ -1,14 +1,16 @@
 package http
 
 import (
-	"marketing/internal/infrastructure/database"
+	"marketing/internal/infrastructure/logger"
 	"net/http"
-
-	"marketing/internal/transport/http/api"
-	"marketing/internal/transport/http/handler"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+
+	"marketing/internal/infrastructure/database"
+	"marketing/internal/transport/http/api"
+	"marketing/internal/transport/http/handler"
+	custom_middleware "marketing/internal/transport/http/middleware"
 )
 
 type ApiServer struct {
@@ -20,10 +22,12 @@ type ApiServer struct {
 func newRouter(
 	userHandler *handler.UserHandler,
 	orderHandler *handler.OrderHandler,
+	customLogger *logger.Logger,
 ) http.Handler {
 	r := chi.NewRouter()
 
-	r.Use(middleware.Logger)
+	r.Use(custom_middleware.TraceIDMiddleware)
+	r.Use(custom_middleware.LoggerMiddleware(customLogger))
 	r.Use(middleware.Recoverer)
 
 	r.Get("/ping", func(w http.ResponseWriter, r *http.Request) {
@@ -43,9 +47,14 @@ func newRouter(
 
 func GetRouter(
 	pgConn *database.Postgres,
+	logger *logger.Logger,
 ) http.Handler {
 	userHandler := handler.NewUserHandler(pgConn)
 	orderHandler := handler.NewOrderHandler(pgConn)
 
-	return newRouter(userHandler, orderHandler)
+	return newRouter(
+		userHandler,
+		orderHandler,
+		logger,
+	)
 }

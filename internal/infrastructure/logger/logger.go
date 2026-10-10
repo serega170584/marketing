@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"marketing/internal/config"
 	"marketing/pkg/contextutil"
+	"time"
 
 	"go.uber.org/zap"
 )
@@ -86,8 +87,20 @@ func withTraceID(
 	traceIDValue := contextutil.GetTraceID(ctx)
 
 	if traceIDValue != "" {
-		return append([]Field{zap.String(traceID, traceIDValue)}, fields...)
+		return append([]Field{String(traceID, traceIDValue)}, fields...)
 	}
 
 	return fields
+}
+
+func String(key string, value string) Field {
+	return zap.String(key, value)
+}
+
+func Duration(key string, value time.Duration) Field {
+	return zap.Duration(key, value)
+}
+
+func Int(key string, value int) Field {
+	return zap.Int(key, value)
 }
