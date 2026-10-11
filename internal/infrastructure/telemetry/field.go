@@ -1,4 +1,4 @@
-package logger
+package telemetry
 
 import "go.uber.org/zap"
 

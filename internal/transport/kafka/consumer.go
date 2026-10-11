@@ -3,25 +3,30 @@ package kafka
 import (
 	"context"
 	"fmt"
-	"marketing/internal/config"
-	"marketing/internal/infrastructure/logger"
 	"marketing/internal/transport/kafka/message"
 	"time"
 
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/trace"
+
+	"marketing/internal/config"
+	"marketing/internal/infrastructure/telemetry"
 )
 
 type Consumer struct {
 	consumer    *kafka.Consumer
+	tracer      trace.Tracer
 	readTimeout time.Duration
-	logger      *logger.Logger
+	logger      *telemetry.Logger
 	metadata    *kafka.Metadata
 	router      *Router
 }
 
 func NewConsumer(
 	cfg config.KafkaConsumerConfig,
-	logger *logger.Logger,
+	logger *telemetry.Logger,
+	tracer trace.Tracer,
 ) (*Consumer, error) {
 	c, err := kafka.NewConsumer(&kafka.ConfigMap{
 		"bootstrap.servers":        cfg.Brokers,
@@ -48,6 +53,7 @@ func NewConsumer(
 		logger:      logger,
 		metadata:    metadata,
 		router:      getRouter(logger),
+		tracer:      tracer,
 	}, nil
 }
 
@@ -69,7 +75,7 @@ func (c *Consumer) Start(
 	c.logger.Info(
 		ctx,
 		"subscribed to topics. Starting poll loop...",
-		logger.Strings("topics", topics),
+		telemetry.Strings("topics", topics),
 	)
 
 	for {
@@ -82,34 +88,49 @@ func (c *Consumer) Start(
 
 			return nil
 		default:
-			msg, msgErr := c.consumer.ReadMessage(
-				c.readTimeout,
-			)
-			if msgErr != nil {
-				c.logger.Error(
-					ctx,
-					"message getting error",
-					logger.Error(msgErr),
+			func() {
+				msg, msgErr := c.consumer.ReadMessage(
+					c.readTimeout,
 				)
+				if msgErr != nil {
+					c.logger.Error(
+						ctx,
+						"message getting error",
+						telemetry.Error(msgErr),
+					)
 
-				continue
-			}
+					return
+				}
 
-			var topicName string
+				consumerCtx, cancel := context.WithCancel(ctx)
 
-			if msg.TopicPartition.Topic != nil {
-				topicName = *msg.TopicPartition.Topic
-			}
+				consumerCtx = otel.GetTextMapPropagator().Extract(consumerCtx, &KafkaConsumerHeadersCarrier{Headers: msg.Headers})
 
-			internalMsg := message.Message{
-				Topic:   topicName,
-				Payload: msg.Value,
-			}
+				consumerCtx, span := c.tracer.Start(
+					consumerCtx,
+					fmt.Sprintf("Kafka CONSUME from %s", *msg.TopicPartition.Topic),
+					trace.WithSpanKind(trace.SpanKindConsumer),
+				)
+				defer span.End()
 
-			err = c.router.Route(ctx, internalMsg)
-			if err != nil {
-				c.logger.Error(ctx, "message routing error", logger.Error(err))
-			}
+				defer cancel()
+
+				var topicName string
+
+				if msg.TopicPartition.Topic != nil {
+					topicName = *msg.TopicPartition.Topic
+				}
+
+				internalMsg := message.Message{
+					Topic:   topicName,
+					Payload: msg.Value,
+				}
+
+				err = c.router.Route(consumerCtx, internalMsg)
+				if err != nil {
+					c.logger.Error(ctx, "message routing error", telemetry.Error(err))
+				}
+			}()
 		}
 	}
 }
@@ -121,4 +142,29 @@ func (c *Consumer) Close(ctx context.Context) error {
 	)
 
 	return c.consumer.Close()
+}
+
+type KafkaConsumerHeadersCarrier struct {
+	Headers []kafka.Header
+}
+
+func (c *KafkaConsumerHeadersCarrier) Get(key string) string {
+	for _, h := range c.Headers {
+		if h.Key == key {
+			return string(h.Value)
+		}
+	}
+
+	return ""
+}
+
+func (c *KafkaConsumerHeadersCarrier) Set(key string, value string) {}
+
+func (c *KafkaConsumerHeadersCarrier) Keys() []string {
+	keys := make([]string, len(c.Headers))
+	for i, h := range c.Headers {
+		keys[i] = h.Key
+	}
+
+	return keys
 }

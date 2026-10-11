@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"marketing/internal/config"
 
+	"github.com/exaring/otelpgx"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -21,6 +22,12 @@ func New(cfg config.DBConfig) (*Postgres, error) {
 	if err != nil {
 		return nil, fmt.Errorf("parse config: %w", err)
 	}
+
+	pgxTracer := otelpgx.NewTracer(
+		otelpgx.WithIncludeQueryParameters(),
+	)
+
+	poolCfg.ConnConfig.Tracer = pgxTracer
 
 	poolCfg.MaxConns = int32(cfg.MaxOpenConns)
 

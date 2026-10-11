@@ -14,7 +14,12 @@ type Config struct {
 	Server        ServerConfig
 	KafkaConsumer KafkaConsumerConfig
 	DB            DBConfig
+	Service       ServiceConfig
 	Logger        LoggerConfig
+}
+
+type ServiceConfig struct {
+	Name string
 }
 
 type ServerConfig struct {

@@ -3,7 +3,7 @@ package kafka
 import (
 	"context"
 	"fmt"
-	"marketing/internal/infrastructure/logger"
+	"marketing/internal/infrastructure/telemetry"
 	"marketing/internal/transport/kafka/handler"
 	"marketing/internal/transport/kafka/message"
 )
@@ -45,7 +45,7 @@ func (r *Router) GetTopics() []string {
 	return topics
 }
 
-func getRouter(logger *logger.Logger) *Router {
+func getRouter(logger *telemetry.Logger) *Router {
 	r := NewRouter()
 
 	r.Register("user.add", handler.NewUserCreatedHandler(logger))

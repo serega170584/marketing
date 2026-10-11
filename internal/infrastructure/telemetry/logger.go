@@ -1,13 +1,14 @@
-package logger
+package telemetry
 
 import (
 	"context"
-	"fmt"
 	"marketing/internal/config"
 	"marketing/pkg/contextutil"
+	"os"
 	"time"
 
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 const traceID = "trace_id"
@@ -16,30 +17,36 @@ type Logger struct {
 	logger *zap.Logger
 }
 
-func NewLogger(
-	cfg config.LoggerConfig,
-) (*Logger, error) {
+func NewLogger(cfg config.LoggerConfig) *Logger {
 	var logger *zap.Logger
 
-	var err error
+	encoderCfg := zap.NewProductionEncoderConfig()
+	encoderCfg.TimeKey = "timestamp"
+	encoderCfg.EncodeTime = zapcore.ISO8601TimeEncoder
 
-	if cfg.Env == "dev" {
-		logger, err = zap.NewDevelopment()
-		if err != nil {
-			return nil, fmt.Errorf("zap development logger initialization failed: %w", err)
-		}
+	if cfg.Env == "dev" || cfg.Env == "local" {
+		devConfig := zap.NewDevelopmentEncoderConfig()
+		devConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
+		devConfig.EncodeTime = zapcore.TimeEncoderOfLayout("15:04:05")
+
+		logger = zap.New(zapcore.NewCore(
+			zapcore.NewConsoleEncoder(devConfig),
+			zapcore.AddSync(os.Stdout),
+			zap.DebugLevel,
+		), zap.AddCaller(), zap.AddCallerSkip(1))
 	}
 
 	if cfg.Env == "prod" {
-		logger, err = zap.NewProduction()
-		if err != nil {
-			return nil, fmt.Errorf("zap production logger initialization failed: %w", err)
-		}
+		logger = zap.New(zapcore.NewCore(
+			zapcore.NewJSONEncoder(encoderCfg),
+			zapcore.AddSync(os.Stdout),
+			zap.InfoLevel,
+		), zap.AddCaller(), zap.AddCallerSkip(1))
 	}
 
 	return &Logger{
 		logger: logger,
-	}, nil
+	}
 }
 
 func (l *Logger) Info(

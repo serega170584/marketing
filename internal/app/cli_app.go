@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 	"marketing/internal/config"
-	"marketing/internal/infrastructure/logger"
+	"marketing/internal/infrastructure/telemetry"
 	"marketing/internal/transport/kafka"
 	"os"
 	"os/signal"
@@ -16,20 +16,17 @@ import (
 
 type CliApp struct {
 	consumer *kafka.Consumer
-	logger   *logger.Logger
+	logger   *telemetry.Logger
 }
 
 func NewCliApp(cfg *config.Config) (*CliApp, error) {
 	var err error
 
-	var customLogger *logger.Logger
+	var customLogger *telemetry.Logger
 
 	var consumer *kafka.Consumer
 
-	customLogger, err = logger.NewLogger(cfg.Logger)
-	if err != nil {
-		return nil, fmt.Errorf("logger init failed: %w", err)
-	}
+	customLogger = telemetry.NewLogger(cfg.Logger)
 
 	consumer, err = kafka.NewConsumer(
 		cfg.KafkaConsumer,

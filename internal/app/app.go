@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"log"
 	"marketing/internal/infrastructure/database"
-	"marketing/internal/infrastructure/logger"
+	"marketing/internal/infrastructure/telemetry"
 	"net/http"
 	"os"
 	"os/signal"
@@ -23,7 +23,7 @@ import (
 type App struct {
 	httpServer *http.Server
 	pgConn     *database.Postgres
-	logger     *logger.Logger
+	logger     *telemetry.Logger
 }
 
 //nolint:exhaustruct_v5
@@ -33,16 +33,14 @@ func NewApp(cfg *config.Config) (*App, error) {
 		return nil, fmt.Errorf("failed to create database connection: %w", err)
 	}
 
-	customLogger, err := logger.NewLogger(cfg.Logger)
-	if err != nil {
-		return nil, fmt.Errorf("logger init failed: %w", err)
-	}
+	customLogger := telemetry.NewLogger(cfg.Logger)
 
 	log.Println("Database connection established successfully")
 
 	router := transportHTTP.GetRouter(
 		pgConn,
 		customLogger,
+		cfg.Service,
 	)
 
 	srv := &http.Server{

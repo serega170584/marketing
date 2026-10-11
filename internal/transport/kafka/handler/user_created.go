@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"marketing/internal/infrastructure/logger"
+	"marketing/internal/infrastructure/telemetry"
 	"marketing/internal/transport/kafka/message"
 )
 
@@ -14,11 +14,11 @@ type UserCreatedPayload struct {
 }
 
 type UserCreatedHandler struct {
-	logger *logger.Logger
+	logger *telemetry.Logger
 }
 
 func NewUserCreatedHandler(
-	logger *logger.Logger,
+	logger *telemetry.Logger,
 ) *UserCreatedHandler {
 	return &UserCreatedHandler{
 		logger: logger,

@@ -1,16 +1,18 @@
 package http
 
 import (
-	"marketing/internal/infrastructure/logger"
+	"marketing/internal/config"
+	"marketing/internal/infrastructure/telemetry"
 	"net/http"
-
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
 
 	"marketing/internal/infrastructure/database"
 	"marketing/internal/transport/http/api"
 	"marketing/internal/transport/http/handler"
 	custom_middleware "marketing/internal/transport/http/middleware"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
 type ApiServer struct {
@@ -22,13 +24,18 @@ type ApiServer struct {
 func newRouter(
 	userHandler *handler.UserHandler,
 	orderHandler *handler.OrderHandler,
-	customLogger *logger.Logger,
+	customLogger *telemetry.Logger,
+	serviceCfg config.ServiceConfig,
 ) http.Handler {
 	r := chi.NewRouter()
 
 	r.Use(custom_middleware.TraceIDMiddleware)
 	r.Use(custom_middleware.LoggerMiddleware(customLogger))
 	r.Use(middleware.Recoverer)
+
+	r.Use(func(next http.Handler) http.Handler {
+		return otelhttp.NewHandler(next, serviceCfg.Name)
+	})
 
 	r.Get("/ping", func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte("pong"))
@@ -47,7 +54,8 @@ func newRouter(
 
 func GetRouter(
 	pgConn *database.Postgres,
-	logger *logger.Logger,
+	logger *telemetry.Logger,
+	serviceCfg config.ServiceConfig,
 ) http.Handler {
 	userHandler := handler.NewUserHandler(pgConn)
 	orderHandler := handler.NewOrderHandler(pgConn)
@@ -56,5 +64,6 @@ func GetRouter(
 		userHandler,
 		orderHandler,
 		logger,
+		serviceCfg,
 	)
 }
