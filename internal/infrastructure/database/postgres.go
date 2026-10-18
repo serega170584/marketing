@@ -18,9 +18,6 @@ func New(
 	ctx context.Context,
 	cfg config.DBConfig,
 ) (*Postgres, error) {
-	dbCtx, cancel := context.WithCancel(ctx)
-	defer cancel()
-
 	poolCfg, err := pgxpool.ParseConfig(cfg.URL)
 	if err != nil {
 		return nil, fmt.Errorf("parse config: %w", err)
@@ -34,14 +31,12 @@ func New(
 
 	poolCfg.MaxConns = int32(cfg.MaxOpenConns)
 
-	pool, err := pgxpool.NewWithConfig(dbCtx, poolCfg)
+	pool, err := pgxpool.NewWithConfig(ctx, poolCfg)
 	if err != nil {
 		return nil, fmt.Errorf("create pool: %w", err)
 	}
 
-	if err = pool.Ping(dbCtx); err != nil {
-		pool.Close()
-
+	if err = pool.Ping(ctx); err != nil {
 		return nil, fmt.Errorf("ping db: %w", err)
 	}
 

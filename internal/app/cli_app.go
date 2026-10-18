@@ -19,9 +19,13 @@ import (
 type CliApp struct {
 	consumer *kafka.Consumer
 	logger   *telemetry.Logger
+	tracer   *telemetry.Tracer
 }
 
-func NewCliApp(cfg *config.Config) (*CliApp, error) {
+func NewCliApp(cfg *config.Config) (
+	*CliApp,
+	error,
+) {
 	var err error
 
 	var customLogger *telemetry.Logger
@@ -50,6 +54,7 @@ func NewCliApp(cfg *config.Config) (*CliApp, error) {
 	return &CliApp{
 		consumer: consumer,
 		logger:   customLogger,
+		tracer:   tracer,
 	}, nil
 }
 
@@ -78,6 +83,15 @@ func (a *CliApp) Run() {
 		err = a.consumer.Close(shutdownCtx)
 		if err != nil {
 			log.Printf("consumer close failed: %v", err)
+		}
+	})
+
+	wg.Go(func() {
+		log.Println("Waiting for tracer to finish...")
+
+		err = a.tracer.Shutdown(shutdownCtx)
+		if err != nil {
+			log.Printf("tracer shutdown failed: %v", err)
 		}
 	})
 

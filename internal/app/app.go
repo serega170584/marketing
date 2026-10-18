@@ -39,9 +39,9 @@ func NewApp(
 		return nil, fmt.Errorf("failed to create database connection: %w", err)
 	}
 
-	customLogger := telemetry.NewLogger(cfg.Logger)
-
 	log.Println("Database connection established successfully")
+
+	customLogger := telemetry.NewLogger(cfg.Logger)
 
 	router := transportHTTP.GetRouter(
 		pgConn,
