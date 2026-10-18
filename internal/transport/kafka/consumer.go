@@ -11,22 +11,21 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	"marketing/internal/config"
-	"marketing/internal/infrastructure/telemetry"
 )
 
 type Consumer struct {
 	consumer    *kafka.Consumer
-	tracer      trace.Tracer
+	tracer      Tracer
 	readTimeout time.Duration
-	logger      *telemetry.Logger
+	logger      Logger
 	metadata    *kafka.Metadata
 	router      *Router
 }
 
 func NewConsumer(
 	cfg config.KafkaConsumerConfig,
-	logger *telemetry.Logger,
-	tracer trace.Tracer,
+	logger Logger,
+	tracer Tracer,
 ) (*Consumer, error) {
 	c, err := kafka.NewConsumer(&kafka.ConfigMap{
 		"bootstrap.servers":        cfg.Brokers,
@@ -75,7 +74,9 @@ func (c *Consumer) Start(
 	c.logger.Info(
 		ctx,
 		"subscribed to topics. Starting poll loop...",
-		telemetry.Strings("topics", topics),
+		map[string]any{
+			"topics": topics,
+		},
 	)
 
 	for {
@@ -84,6 +85,7 @@ func (c *Consumer) Start(
 			c.logger.Info(
 				ctx,
 				"received shutdown signal, stopping poll loop...",
+				nil,
 			)
 
 			return nil
@@ -96,7 +98,9 @@ func (c *Consumer) Start(
 					c.logger.Error(
 						ctx,
 						"message getting error",
-						telemetry.Error(msgErr),
+						map[string]any{
+							"error": msgErr,
+						},
 					)
 
 					return
@@ -128,7 +132,13 @@ func (c *Consumer) Start(
 
 				err = c.router.Route(consumerCtx, internalMsg)
 				if err != nil {
-					c.logger.Error(ctx, "message routing error", telemetry.Error(err))
+					c.logger.Error(
+						ctx,
+						"message routing error",
+						map[string]any{
+							"error": err,
+						},
+					)
 				}
 			}()
 		}
@@ -139,6 +149,7 @@ func (c *Consumer) Close(ctx context.Context) error {
 	c.logger.Info(
 		ctx,
 		"closing consumer and committing offsets...",
+		nil,
 	)
 
 	return c.consumer.Close()

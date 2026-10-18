@@ -12,6 +12,8 @@ import (
 	"sync"
 	"syscall"
 	"time"
+
+	"go.opentelemetry.io/otel"
 )
 
 type CliApp struct {
@@ -28,9 +30,18 @@ func NewCliApp(cfg *config.Config) (*CliApp, error) {
 
 	customLogger = telemetry.NewLogger(cfg.Logger)
 
+	tracer, err := telemetry.NewTracer(
+		cfg.Tracer.ServiceName,
+		otel.Tracer(cfg.Tracer.ServiceName),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("tracer init failed: %w", err)
+	}
+
 	consumer, err = kafka.NewConsumer(
 		cfg.KafkaConsumer,
 		customLogger,
+		tracer,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("consumer init failed: %w", err)

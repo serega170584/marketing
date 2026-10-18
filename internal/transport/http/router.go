@@ -2,7 +2,6 @@ package http
 
 import (
 	"marketing/internal/config"
-	"marketing/internal/infrastructure/telemetry"
 	"net/http"
 
 	"marketing/internal/infrastructure/database"
@@ -24,7 +23,7 @@ type ApiServer struct {
 func newRouter(
 	userHandler *handler.UserHandler,
 	orderHandler *handler.OrderHandler,
-	customLogger *telemetry.Logger,
+	customLogger Logger,
 	serviceCfg config.ServiceConfig,
 ) http.Handler {
 	r := chi.NewRouter()
@@ -54,7 +53,7 @@ func newRouter(
 
 func GetRouter(
 	pgConn *database.Postgres,
-	logger *telemetry.Logger,
+	logger Logger,
 	serviceCfg config.ServiceConfig,
 ) http.Handler {
 	userHandler := handler.NewUserHandler(pgConn)

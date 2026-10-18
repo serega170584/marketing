@@ -2,6 +2,7 @@ package telemetry
 
 import (
 	"context"
+	"fmt"
 	"marketing/internal/config"
 	"marketing/pkg/contextutil"
 	"os"
@@ -52,33 +53,61 @@ func NewLogger(cfg config.LoggerConfig) *Logger {
 func (l *Logger) Info(
 	ctx context.Context,
 	msg string,
-	fields ...Field,
+	fields map[string]any,
 ) {
-	l.logger.Info(msg, withTraceID(ctx, fields...)...)
+	vs, err := mapToFields(fields)
+	if err != nil {
+		l.logger.Error("failed to convert to fields", zap.Error(err))
+
+		return
+	}
+
+	l.logger.Info(msg, withTraceID(ctx, vs...)...)
 }
 
 func (l *Logger) Error(
 	ctx context.Context,
 	msg string,
-	fields ...Field,
+	fields map[string]any,
 ) {
-	l.logger.Error(msg, withTraceID(ctx, fields...)...)
+	vs, err := mapToFields(fields)
+	if err != nil {
+		l.logger.Error("failed to convert to fields", zap.Error(err))
+
+		return
+	}
+
+	l.logger.Error(msg, withTraceID(ctx, vs...)...)
 }
 
 func (l *Logger) Debug(
 	ctx context.Context,
 	msg string,
-	fields ...Field,
+	fields map[string]any,
 ) {
-	l.logger.Debug(msg, withTraceID(ctx, fields...)...)
+	vs, err := mapToFields(fields)
+	if err != nil {
+		l.logger.Error("failed to convert to fields", zap.Error(err))
+
+		return
+	}
+
+	l.logger.Debug(msg, withTraceID(ctx, vs...)...)
 }
 
 func (l *Logger) Warn(
 	ctx context.Context,
 	msg string,
-	fields ...Field,
+	fields map[string]any,
 ) {
-	l.logger.Warn(msg, withTraceID(ctx, fields...)...)
+	vs, err := mapToFields(fields)
+	if err != nil {
+		l.logger.Error("failed to convert to fields", zap.Error(err))
+
+		return
+	}
+
+	l.logger.Warn(msg, withTraceID(ctx, vs...)...)
 }
 
 func (l *Logger) With(fields ...Field) *Logger {
@@ -94,20 +123,31 @@ func withTraceID(
 	traceIDValue := contextutil.GetTraceID(ctx)
 
 	if traceIDValue != "" {
-		return append([]Field{String(traceID, traceIDValue)}, fields...)
+		return append([]Field{zap.String(traceID, traceIDValue)}, fields...)
 	}
 
 	return fields
 }
 
-func String(key string, value string) Field {
-	return zap.String(key, value)
-}
+func mapToFields(m map[string]any) (
+	[]Field,
+	error,
+) {
+	fields := make([]Field, 0, len(m))
+	for fk, fv := range m {
+		switch v := fv.(type) {
+		case string:
+			fields = append(fields, zap.String(fk, v))
+		case time.Duration:
+			fields = append(fields, zap.Duration(fk, v))
+		case int:
+			fields = append(fields, zap.Int(fk, v))
+		case error:
+			fields = append(fields, zap.Error(v))
+		default:
+			return nil, fmt.Errorf("unsupported type %T", fv)
+		}
+	}
 
-func Duration(key string, value time.Duration) Field {
-	return zap.Duration(key, value)
-}
-
-func Int(key string, value int) Field {
-	return zap.Int(key, value)
+	return fields, nil
 }

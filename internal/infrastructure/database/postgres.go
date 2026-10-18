@@ -14,8 +14,11 @@ type Postgres struct {
 }
 
 //nolint:gosec
-func New(cfg config.DBConfig) (*Postgres, error) {
-	ctx, cancel := context.WithCancel(context.Background())
+func New(
+	ctx context.Context,
+	cfg config.DBConfig,
+) (*Postgres, error) {
+	dbCtx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
 	poolCfg, err := pgxpool.ParseConfig(cfg.URL)
@@ -31,12 +34,12 @@ func New(cfg config.DBConfig) (*Postgres, error) {
 
 	poolCfg.MaxConns = int32(cfg.MaxOpenConns)
 
-	pool, err := pgxpool.NewWithConfig(ctx, poolCfg)
+	pool, err := pgxpool.NewWithConfig(dbCtx, poolCfg)
 	if err != nil {
 		return nil, fmt.Errorf("create pool: %w", err)
 	}
 
-	if err := pool.Ping(ctx); err != nil {
+	if err = pool.Ping(dbCtx); err != nil {
 		pool.Close()
 
 		return nil, fmt.Errorf("ping db: %w", err)

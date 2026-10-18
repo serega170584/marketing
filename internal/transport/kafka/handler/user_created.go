@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"marketing/internal/infrastructure/telemetry"
 	"marketing/internal/transport/kafka/message"
 )
 
@@ -14,11 +13,11 @@ type UserCreatedPayload struct {
 }
 
 type UserCreatedHandler struct {
-	logger *telemetry.Logger
+	logger Logger
 }
 
 func NewUserCreatedHandler(
-	logger *telemetry.Logger,
+	logger Logger,
 ) *UserCreatedHandler {
 	return &UserCreatedHandler{
 		logger: logger,
@@ -34,7 +33,11 @@ func (uch *UserCreatedHandler) Handle(
 		return fmt.Errorf("bad payload: %w", err)
 	}
 
-	uch.logger.Info(ctx, "user created message got")
+	uch.logger.Info(
+		ctx,
+		"user created message got",
+		nil,
+	)
 
 	return nil
 }

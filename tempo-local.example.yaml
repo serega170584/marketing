@@ -1,0 +1,27 @@
+stream_over_http_enabled: true
+
+server:
+  http_listen_port: 3200
+
+# 1. Настраиваем приемники данных (сюда наш Go-код будет пушить трейсы)
+distributor:
+  receivers:
+    otlp:
+      protocols:
+        grpc:
+          endpoint: 0.0.0.0:4317 # gRPC порт для приложения
+
+# 2. Легковесные настройки буфера в памяти для локальной работы
+ingester:
+  lifecycler:
+    ring:
+      kvstore:
+        store: inmemory
+      replication_factor: 1
+
+# 3. САМОЕ ГЛАВНОЕ: Пишем на обычный диск, MinIO НЕ НУЖЕН!
+storage:
+  trace:
+    backend: local
+    local:
+      path: /tmp/tempo/traces

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"marketing/internal/app"
 	"marketing/internal/config"
@@ -12,10 +13,18 @@ func main() {
 		log.Fatalf("failed server load config %v", err)
 	}
 
-	application, err := app.NewApp(cfg)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	application, err := app.NewApp(
+		ctx,
+		cfg,
+	)
 	if err != nil {
-		log.Fatalf("failed to create application %v", err)
+		log.Printf("failed to create application %v", err)
+
+		return
 	}
 
-	application.Run()
+	application.Run(ctx)
 }

@@ -27,8 +27,14 @@ type App struct {
 }
 
 //nolint:exhaustruct_v5
-func NewApp(cfg *config.Config) (*App, error) {
-	pgConn, err := database.New(cfg.DB)
+func NewApp(
+	ctx context.Context,
+	cfg *config.Config,
+) (*App, error) {
+	pgConn, err := database.New(
+		ctx,
+		cfg.DB,
+	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create database connection: %w", err)
 	}
@@ -56,8 +62,9 @@ func NewApp(cfg *config.Config) (*App, error) {
 	}, nil
 }
 
-func (a *App) Run() {
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+//nolint:contextcheck
+func (a *App) Run(ctx context.Context) {
+	runCtx, stop := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
 	go func() {
@@ -68,7 +75,7 @@ func (a *App) Run() {
 		}
 	}()
 
-	<-ctx.Done()
+	<-runCtx.Done()
 	log.Println("Shutdown signal received. Initiating graceful shutdown...")
 
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)

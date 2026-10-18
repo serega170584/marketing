@@ -16,6 +16,7 @@ type Config struct {
 	DB            DBConfig
 	Service       ServiceConfig
 	Logger        LoggerConfig
+	Tracer        TracerConfig
 }
 
 type ServiceConfig struct {
@@ -51,6 +52,10 @@ type DBConfig struct {
 
 type LoggerConfig struct {
 	Env string
+}
+
+type TracerConfig struct {
+	ServiceName string
 }
 
 func LoadConfig() (*Config, error) {
@@ -112,8 +117,14 @@ func LoadConfig() (*Config, error) {
 			MaxIdleConns:    maxIdleConns,
 			ConnMaxLifetime: connMaxLifetime,
 		},
+		Service: ServiceConfig{
+			Name: getEnv("SERVICE_NAME", "my-service"),
+		},
 		Logger: LoggerConfig{
 			Env: getEnv("LOGGER_ENV", "dev"),
+		},
+		Tracer: TracerConfig{
+			ServiceName: getEnv("SERVICE_NAME", "my-service"),
 		},
 	}, nil
 }
