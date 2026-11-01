@@ -42,7 +42,7 @@ func newRouter(
 	})
 
 	r.Get("/metrics", func(w http.ResponseWriter, req *http.Request) {
-		metrics.WritePrometheus(w, true)
+		metrics.WritePrometheus(w, false)
 	})
 
 	apiServer := &ApiServer{

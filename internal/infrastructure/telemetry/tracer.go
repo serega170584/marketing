@@ -31,7 +31,7 @@ func NewTracer(
 	res, err := resource.Merge(
 		resource.Default(),
 		resource.NewWithAttributes(
-			semconv.SchemaURL,
+			resource.Default().SchemaURL(),
 			semconv.ServiceNameKey.String(serviceName),
 			attribute.String("environment", "development"),
 		),
