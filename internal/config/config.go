@@ -10,6 +10,12 @@ import (
 	"github.com/joho/godotenv"
 )
 
+const (
+	defaultServiceName    = "marketing"
+	defaultServiceVersion = "1.0"
+	defaultMetricsAddress = "localhost:4317"
+)
+
 type Config struct {
 	Server        ServerConfig
 	KafkaConsumer KafkaConsumerConfig
@@ -17,6 +23,7 @@ type Config struct {
 	Service       ServiceConfig
 	Logger        LoggerConfig
 	Tracer        TracerConfig
+	Metrics       MetricsConfig
 }
 
 type ServiceConfig struct {
@@ -56,6 +63,12 @@ type LoggerConfig struct {
 
 type TracerConfig struct {
 	ServiceName string
+}
+
+type MetricsConfig struct {
+	ServiceName    string
+	ServiceVersion string
+	Address        string
 }
 
 func LoadConfig() (*Config, error) {
@@ -118,13 +131,18 @@ func LoadConfig() (*Config, error) {
 			ConnMaxLifetime: connMaxLifetime,
 		},
 		Service: ServiceConfig{
-			Name: getEnv("SERVICE_NAME", "my-service"),
+			Name: getEnv("SERVICE_NAME", defaultServiceName),
 		},
 		Logger: LoggerConfig{
 			Env: getEnv("LOGGER_ENV", "dev"),
 		},
 		Tracer: TracerConfig{
-			ServiceName: getEnv("SERVICE_NAME", "my-service"),
+			ServiceName: getEnv("SERVICE_NAME", defaultServiceName),
+		},
+		Metrics: MetricsConfig{
+			ServiceName:    getEnv("METRICS_SERVICE_NAME", defaultServiceName),
+			ServiceVersion: getEnv("METRICS_SERVICE_VERSION", defaultServiceVersion),
+			Address:        getEnv("METRICS_SERVICE_ADDRESS", defaultMetricsAddress),
 		},
 	}, nil
 }

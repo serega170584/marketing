@@ -18,12 +18,15 @@ import (
 	transportHTTP "marketing/internal/transport/http"
 
 	_ "github.com/jackc/pgx/v5"
+	"go.opentelemetry.io/otel"
 )
 
 type App struct {
 	httpServer *http.Server
 	pgConn     *database.Postgres
 	logger     *telemetry.Logger
+	tracer     *telemetry.Tracer
+	metrics    *telemetry.Metrics
 }
 
 //nolint:exhaustruct_v5
@@ -43,6 +46,24 @@ func NewApp(
 
 	customLogger := telemetry.NewLogger(cfg.Logger)
 
+	tracer, err := telemetry.NewTracer(
+		cfg.Tracer.ServiceName,
+		otel.Tracer(cfg.Tracer.ServiceName),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("tracer init failed: %w", err)
+	}
+
+	metrics, err := telemetry.NewMetrics(
+		ctx,
+		cfg.Metrics.ServiceName,
+		cfg.Metrics.ServiceVersion,
+		cfg.Metrics.Address,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("metrics init failed: %w", err)
+	}
+
 	router := transportHTTP.GetRouter(
 		pgConn,
 		customLogger,
@@ -59,6 +80,8 @@ func NewApp(
 		httpServer: srv,
 		pgConn:     pgConn,
 		logger:     customLogger,
+		tracer:     tracer,
+		metrics:    metrics,
 	}, nil
 }
 
@@ -100,6 +123,24 @@ func (a *App) Run(ctx context.Context) {
 			a.pgConn.Close()
 		},
 	)
+
+	wg.Go(func() {
+		log.Println("Waiting for tracer to finish...")
+
+		err := a.tracer.Shutdown(shutdownCtx)
+		if err != nil {
+			log.Printf("tracer shutdown failed: %v", err)
+		}
+	})
+
+	wg.Go(func() {
+		log.Println("Waiting for metrics to finish...")
+
+		err := a.metrics.Shutdown(shutdownCtx)
+		if err != nil {
+			log.Printf("metrics shutdown failed: %v", err)
+		}
+	})
 
 	ch := make(chan struct{})
 

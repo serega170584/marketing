@@ -20,9 +20,13 @@ type CliApp struct {
 	consumer *kafka.Consumer
 	logger   *telemetry.Logger
 	tracer   *telemetry.Tracer
+	metrics  *telemetry.Metrics
 }
 
-func NewCliApp(cfg *config.Config) (
+func NewCliApp(
+	ctx context.Context,
+	cfg *config.Config,
+) (
 	*CliApp,
 	error,
 ) {
@@ -42,6 +46,16 @@ func NewCliApp(cfg *config.Config) (
 		return nil, fmt.Errorf("tracer init failed: %w", err)
 	}
 
+	metrics, err := telemetry.NewMetrics(
+		ctx,
+		cfg.Metrics.ServiceName,
+		cfg.Metrics.ServiceVersion,
+		cfg.Metrics.Address,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("metrics init failed: %w", err)
+	}
+
 	consumer, err = kafka.NewConsumer(
 		cfg.KafkaConsumer,
 		customLogger,
@@ -55,6 +69,7 @@ func NewCliApp(cfg *config.Config) (
 		consumer: consumer,
 		logger:   customLogger,
 		tracer:   tracer,
+		metrics:  metrics,
 	}, nil
 }
 
@@ -92,6 +107,15 @@ func (a *CliApp) Run() {
 		err = a.tracer.Shutdown(shutdownCtx)
 		if err != nil {
 			log.Printf("tracer shutdown failed: %v", err)
+		}
+	})
+
+	wg.Go(func() {
+		log.Println("Waiting for metrics to finish...")
+
+		err = a.metrics.Shutdown(shutdownCtx)
+		if err != nil {
+			log.Printf("metrics shutdown failed: %v", err)
 		}
 	})
 

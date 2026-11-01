@@ -9,6 +9,7 @@ import (
 	"marketing/internal/transport/http/handler"
 	custom_middleware "marketing/internal/transport/http/middleware"
 
+	"github.com/VictoriaMetrics/metrics"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
@@ -38,6 +39,10 @@ func newRouter(
 
 	r.Get("/ping", func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte("pong"))
+	})
+
+	r.Get("/metrics", func(w http.ResponseWriter, req *http.Request) {
+		metrics.WritePrometheus(w, true)
 	})
 
 	apiServer := &ApiServer{

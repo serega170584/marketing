@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"marketing/internal/app"
 	"marketing/internal/config"
@@ -31,7 +32,13 @@ func main() {
 				panic(fmt.Errorf("config init failed: %w", err))
 			}
 
-			cliApp, err = app.NewCliApp(cfg)
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+
+			cliApp, err = app.NewCliApp(
+				ctx,
+				cfg,
+			)
 			if err != nil {
 				panic(fmt.Errorf("cli app init failed: %w", err))
 			}
