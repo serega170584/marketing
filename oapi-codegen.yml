@@ -3,4 +3,4 @@ generate:
   chi-server: true
   models: true
   embedded-spec: true
-output: internal/transport/http/api/openapi.gen.go
+output: openapi.gen.go

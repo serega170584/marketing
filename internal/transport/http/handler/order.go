@@ -53,7 +53,11 @@ func (h *OrderHandler) GetOrders(w http.ResponseWriter, r *http.Request) {
 }
 
 // UpdateOrder обрабатывает PUT /orders/{id}
-func (h *OrderHandler) UpdateOrder(w http.ResponseWriter, r *http.Request, id int) {
+func (h *OrderHandler) UpdateOrder(
+	w http.ResponseWriter,
+	r *http.Request,
+	id uint64,
+) {
 	var req api.UpdateOrderRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		w.Header().Set("Content-Type", "application/json")

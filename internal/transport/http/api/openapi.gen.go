@@ -22,7 +22,7 @@ import (
 // CreateOrderRequest defines model for CreateOrderRequest.
 type CreateOrderRequest struct {
 	TotalAmount float32 `json:"total_amount"`
-	UserId      int     `json:"user_id"`
+	UserId      uint64  `json:"user_id"`
 }
 
 // CreateOrderResponse defines model for CreateOrderResponse.
@@ -50,10 +50,10 @@ type ErrorResponse struct {
 
 // OrderResponse defines model for OrderResponse.
 type OrderResponse struct {
-	Id          int     `json:"id"`
+	Id          uint64  `json:"id"`
 	Status      string  `json:"status"`
 	TotalAmount float32 `json:"total_amount"`
-	UserId      int     `json:"user_id"`
+	UserId      uint64  `json:"user_id"`
 }
 
 // UpdateOrderRequest defines model for UpdateOrderRequest.
@@ -71,7 +71,7 @@ type UpdateUserRequest struct {
 // UserResponse defines model for UserResponse.
 type UserResponse struct {
 	Email openapi_types.Email `json:"email"`
-	Id    int                 `json:"id"`
+	Id    uint64              `json:"id"`
 	Name  string              `json:"name"`
 }
 
@@ -106,16 +106,19 @@ type ServerInterface interface {
 	CreateOrder(w http.ResponseWriter, r *http.Request)
 	// Update an existing order by ID
 	// (PUT /orders/{id})
-	UpdateOrder(w http.ResponseWriter, r *http.Request, id int)
+	UpdateOrder(w http.ResponseWriter, r *http.Request, id uint64)
 	// Get user list
 	// (GET /users)
 	GetUsers(w http.ResponseWriter, r *http.Request)
 	// Create a new user
 	// (POST /users)
 	CreateUser(w http.ResponseWriter, r *http.Request)
+	// Get user by ID
+	// (GET /users/{id})
+	GetUserById(w http.ResponseWriter, r *http.Request, id uint64)
 	// Update an existing user by ID
 	// (PUT /users/{id})
-	UpdateUser(w http.ResponseWriter, r *http.Request, id int)
+	UpdateUser(w http.ResponseWriter, r *http.Request, id uint64)
 }
 
 // Unimplemented server implementation that returns http.StatusNotImplemented for each endpoint.
@@ -136,7 +139,7 @@ func (_ Unimplemented) CreateOrder(w http.ResponseWriter, r *http.Request) {
 
 // Update an existing order by ID
 // (PUT /orders/{id})
-func (_ Unimplemented) UpdateOrder(w http.ResponseWriter, r *http.Request, id int) {
+func (_ Unimplemented) UpdateOrder(w http.ResponseWriter, r *http.Request, id uint64) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -152,9 +155,15 @@ func (_ Unimplemented) CreateUser(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
+// Get user by ID
+// (GET /users/{id})
+func (_ Unimplemented) GetUserById(w http.ResponseWriter, r *http.Request, id uint64) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
 // Update an existing user by ID
 // (PUT /users/{id})
-func (_ Unimplemented) UpdateUser(w http.ResponseWriter, r *http.Request, id int) {
+func (_ Unimplemented) UpdateUser(w http.ResponseWriter, r *http.Request, id uint64) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -201,7 +210,7 @@ func (siw *ServerInterfaceWrapper) UpdateOrder(w http.ResponseWriter, r *http.Re
 	var err error
 
 	// ------------- Path parameter "id" -------------
-	var id int
+	var id uint64
 
 	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
 	if err != nil {
@@ -248,13 +257,38 @@ func (siw *ServerInterfaceWrapper) CreateUser(w http.ResponseWriter, r *http.Req
 	handler.ServeHTTP(w, r)
 }
 
+// GetUserById operation middleware
+func (siw *ServerInterfaceWrapper) GetUserById(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id uint64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetUserById(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // UpdateUser operation middleware
 func (siw *ServerInterfaceWrapper) UpdateUser(w http.ResponseWriter, r *http.Request) {
 
 	var err error
 
 	// ------------- Path parameter "id" -------------
-	var id int
+	var id uint64
 
 	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
 	if err != nil {
@@ -402,6 +436,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Post(options.BaseURL+"/users", wrapper.CreateUser)
 	})
 	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/users/{id}", wrapper.GetUserById)
+	})
+	r.Group(func(r chi.Router) {
 		r.Put(options.BaseURL+"/users/{id}", wrapper.UpdateUser)
 	})
 
@@ -411,25 +448,25 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/9xY30/cRhD+V1bbPlpnQ0kV/NSkaaur2iYKzVOKosU7Pi+1d5z9wXFC/t+r2TXHmTOY",
-	"HwcofTO+nZlvZr75dswFL7BpUYN2lucX3IBtUVsIf7wV8iN89WDdL8agoVcFagfa0aNo21oVwinU6alF",
-	"Te9sUUEj6Ol7AyXP+Xfplf80/mrT4O1jH4l3XZdwCbYwqiVnPOdzfSZqJZmJ0dkJyhVDw1qxqlFIFn4N",
-	"kVkpVO0N8C7hc+3AaFEfgTkD8+yQY3BmQ3QGZMCwKLwxINmyUjUwOIfCO6UXDFswAQcB/wvdr+i1fGbI",
-	"f1fAbAuFKhVQrS16UwBbCss0OlYSJE5mvUcK+LMB4eC9kWB6atDb1lA+TkXaOHSi/iIa9DEFOBdNWwPP",
-	"Dw9nh4cJL9E0wvGclzUKxxPuVi3wnGvfnIChgngL5ouSA+O99TmlHSzoYJdwYogyIHn+eW2VDBEcrw3x",
-	"5BQKRwEGafQV2sqjAWvFAgYoeLBhRbCXV9itM0ovyLV1wnk7NLK+KMDa7ePXMuhtk3Xom7F/srd0ABqh",
-	"6iGEU6z0TCL81L+aFdjwjV5Ek5F8tGiuleB3rDR7hzCZTjBNetdTqdyrC2Tyok0YDtd2Ay4n+Sr8ETbg",
-	"Kpr9JWjHlgZJBjRDbxhoOQkruhzDMkHja3N0sL89SOMFa0FLQjJS35ca8TDdV3O+btXkwH9q5aRujdbA",
-	"IJHmvmXY289mr6bLcBPz7pjOgzTANspVu1KBI3L2eB24XQF2qWbTjHuU4gVWTqRLNkqXSCGGF/KbD3NW",
-	"omGN0GJBSkFMt0xoyZCYa9lSkYQwVwFrhPkXwi7RqMIgrR2qgBlBVC6g/nN9IsjlPz7L9n9k8QJ782HO",
-	"E34GxsbQe7NsllHy2IIWreI5/yG8SngrXBX6kEYQ9LiAwLj1FjOXPOe/gXsfTyTDPXI/y+611SgHjZ1a",
-	"b4aq163LLIwRq7F15yjqf+nresVKcEUFfV1ZrWzg4asIdCzsOqF0bM0MW5JvGmFWsRDXHLdoRwq2sYXw",
-	"yCOw7i3K1c52wJF1rRty1hkP3Va/9p4Gwc27aGSl3WzR5fXeJfzgLn25/rWyu37GHJhgGpaxseFAPw/p",
-	"hZJdUC0/0uONiyfMkhENuDBFny9G9nGv1VcPTEnQjvZyw7AM4469B0UnaSQvhSaPojPsaLLRna0r9fhp",
-	"uDZyxd6Ja9nOEDyEZT6gfhTLDrKDabvhN97uuBmrzoRmcK5s/LYMWZ6s2Pxd5Gm4Rm6T7U/2uVR7cNM/",
-	"VLQpn6fQ7IHf2ySbsnhSxd7c7F5EsId92u5L2Ci+Bbmmnm5MwV3Euu/uw7Xa229Cqu9Nst0p9f3p9T/U",
-	"6SA3lzJNh4PxGNv+wELUTMIZ1Ng2oF3/X0b6GDY1z3nlXJunaU3nKrQuf529zlLRqvRsj3fH3X8BAAD/",
-	"/8DDCYPnFQAA",
+	"H4sIAAAAAAAC/9xY32/bNhD+Vwhuj4KlZGnR6Gntug0etrVolqcuKBjxZDGTeCx/xDEC/e8DScWxYsVy",
+	"Ejvp9qbIvLvv7r77eMo1LbBRKEFaQ/NrqsEolAbCH+8Y/wRfHRj7s9ao/asCpQVp/SNTqhYFswJlemFQ",
+	"+nemqKBh/ul7DSXN6Xfprf80/mrS4O1TF4m2bZtQDqbQQnlnNKdTeclqwYmO0ck58gVBTRRb1Mg4Cb+G",
+	"yKRkonYaaJvQqbSgJatPQF+CfnbIMTgxIToBb0CwKJzWwMm8EjUQuILCWSFnBBXogMMD/xPtL+gkf2bI",
+	"f1VAjIJClAJ8rQ06XQCZM0MkWlJ6SNSbdR59wJ80MAsfNAfdUcO/VdrnY0WkjUXL6i+sQRdTgCvWqBpo",
+	"fnw8OT5OaIm6YZbmtKyRWZpQu1BAcypdcw7aF8QZ0F8E7xkfrBg6Ie3ro1tLIS3MvGmbUM8ZoYHT/PPS",
+	"T9LHdLY0xPMLKKwP2Uusq9laZg0Yw2bQw0WDDSmCPb/FZKwWcuZdG8usM30j44oCjFk/fieDzjZZhr4f",
+	"+6nZ0BNomKj7EC6wkhOO8GP3alJgQ1eKHE0G8pGsuVOC37CS5D3CaDrBNOlcj6XyoC54kxdtQn/c1htw",
+	"M9u34U+wAVt5NZiDtGSu0QuDJOg0AclHYUWXQ1hGaHxnso4Otxmt4RIqkNxjG6j4tyMDQQFutWDZzlFR",
+	"OFV8VO0Gq6LRE+uhhTk4zCavxgtzHzu3TOdROmEaYatdKcWJd/Z0rdisErtUvMdw8Ek6GXg6UgBvI2SJ",
+	"PkT/Yn/7cUpK1KRhks28vnjuG8IkJ+i5bMhceOEhtgLSMP0PhJ2kEYVGv76IAiYeorAB9R/LE0Fk/3ZZ",
+	"dviaxGvv7ccpTeglaBNDH0yySeaTRwWSKUFz+kN4lVDFbBU6k0YQ/nEGgYPLbWjKaU5/Bfshnkj6++hh",
+	"lj1oOxIWGjO2JvW1sl2WmWnNFkNr00m8NUpX1wtSgi0q6OpKamECM19FoENhlwmlQ+tq2LZc0zC9iIW4",
+	"41ihGSjYyu5CI4/A2HfIFzvbJQfWvrbPWasdtGv9OtgPgvt32shKs9qim6WgTejRNn25+9Wzu37GHAgj",
+	"EuaxseFANw/pteBt0DE30OOVqyjMkmYN2DBFn68H9nonxVcHRHCQ1u/3mmAZxh07D8Kf9CN5IzR5FJ1+",
+	"R5OV7mxx7Z7th30D1/BW7Mt2huAxvHMB9ZN4d5Qdjdv1vx53x9ZYdcIkgSth4ldryPJ8QabvI3PDxbJJ",
+	"yE/Nc+l4bxt4rIz7fPah4j2/m0TcZ7FXDV/d/l5Ewvt9Wu9L2DH+CwLue7oyBUv53jQK7xZT/iT5dmbP",
+	"6r0nAR3r+v3TyMEyUZsXl8PlGHfyl2y6p7sx/ob7vK9b+sH68nwcW1eW/+EVvUrRcDgYD/HvdyxYTThc",
+	"Qo2qAWm7f13ThDpd05xW1qo8TWt/rkJj8zfZmyxlSqSXB7Q9a/8NAAD//yToP4w8GAAA",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

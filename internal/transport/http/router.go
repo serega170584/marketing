@@ -2,6 +2,8 @@ package http
 
 import (
 	"marketing/internal/config"
+	"marketing/internal/infrastructure/telemetry"
+	"marketing/internal/usecase"
 	"net/http"
 
 	"marketing/internal/infrastructure/database"
@@ -58,10 +60,16 @@ func newRouter(
 
 func GetRouter(
 	pgConn *database.Postgres,
-	logger Logger,
+	logger *telemetry.Logger,
 	serviceCfg config.ServiceConfig,
+	userUseCase *usecase.UserUseCase,
 ) http.Handler {
-	userHandler := handler.NewUserHandler(pgConn)
+	userHandler := handler.NewUserHandler(
+		pgConn,
+		userUseCase,
+		logger,
+	)
+
 	orderHandler := handler.NewOrderHandler(pgConn)
 
 	return newRouter(
