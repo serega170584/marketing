@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"log"
+
 	"marketing/internal/app"
 	"marketing/internal/config"
 )
