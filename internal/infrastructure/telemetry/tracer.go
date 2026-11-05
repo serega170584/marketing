@@ -3,10 +3,11 @@ package telemetry
 import (
 	"context"
 	"fmt"
+	"marketing/internal/config"
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
@@ -20,10 +21,16 @@ type Tracer struct {
 }
 
 func NewTracer(
-	serviceName string,
-	tracer trace.Tracer,
-) (*Tracer, error) {
-	exporter, err := stdouttrace.New(stdouttrace.WithPrettyPrint())
+	ctx context.Context,
+	cfg config.TracerConfig,
+) (
+	*Tracer,
+	error,
+) {
+	exporter, err := otlptracehttp.New(ctx,
+		otlptracehttp.WithEndpoint(cfg.Address),
+		otlptracehttp.WithInsecure(),
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -32,7 +39,7 @@ func NewTracer(
 		resource.Default(),
 		resource.NewWithAttributes(
 			resource.Default().SchemaURL(),
-			semconv.ServiceNameKey.String(serviceName),
+			semconv.ServiceNameKey.String(cfg.ServiceName),
 			attribute.String("environment", "development"),
 		),
 	)
@@ -48,9 +55,9 @@ func NewTracer(
 	otel.SetTracerProvider(tp)
 
 	return &Tracer{
-		serviceName: serviceName,
+		serviceName: cfg.ServiceName,
 		provider:    tp,
-		tracer:      tracer,
+		tracer:      otel.Tracer(cfg.ServiceName),
 	}, nil
 }
 

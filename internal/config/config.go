@@ -14,6 +14,7 @@ const (
 	defaultServiceName    = "marketing"
 	defaultServiceVersion = "1.0"
 	defaultMetricsAddress = "localhost:4317"
+	defaultTracerAddress  = "localhost:4318"
 )
 
 type Config struct {
@@ -63,6 +64,7 @@ type LoggerConfig struct {
 
 type TracerConfig struct {
 	ServiceName string
+	Address     string
 }
 
 type MetricsConfig struct {
@@ -138,6 +140,7 @@ func LoadConfig() (*Config, error) {
 		},
 		Tracer: TracerConfig{
 			ServiceName: getEnv("SERVICE_NAME", defaultServiceName),
+			Address:     getEnv("TRACER_ADDRESS", defaultTracerAddress),
 		},
 		Metrics: MetricsConfig{
 			ServiceName:    getEnv("METRICS_SERVICE_NAME", defaultServiceName),

@@ -21,7 +21,6 @@ import (
 	transportHTTP "marketing/internal/transport/http"
 
 	_ "github.com/jackc/pgx/v5"
-	"go.opentelemetry.io/otel"
 )
 
 type App struct {
@@ -50,8 +49,8 @@ func NewApp(
 	customLogger := telemetry.NewLogger(cfg.Logger)
 
 	tracer, err := telemetry.NewTracer(
-		cfg.Tracer.ServiceName,
-		otel.Tracer(cfg.Tracer.ServiceName),
+		ctx,
+		cfg.Tracer,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("tracer init failed: %w", err)
