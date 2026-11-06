@@ -1,13 +1,14 @@
 package middleware
 
 import (
+	"marketing/internal/infrastructure/telemetry/logger"
 	"net/http"
 	"time"
 
 	"github.com/go-chi/chi/v5/middleware"
 )
 
-func LoggerMiddleware(customlogger Logger) func(next http.Handler) http.Handler {
+func LoggerMiddleware() func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			t1 := time.Now()
@@ -15,15 +16,13 @@ func LoggerMiddleware(customlogger Logger) func(next http.Handler) http.Handler 
 
 			next.ServeHTTP(ww, r)
 
-			customlogger.Info(
+			logger.Info(
 				r.Context(),
 				"request completed",
-				map[string]any{
-					"method":   r.Method,
-					"uri":      r.RequestURI,
-					"duration": time.Since(t1),
-					"status":   ww.Status(),
-				},
+				logger.String("method", r.Method),
+				logger.String("uri", r.RequestURI),
+				logger.Duration("duration", time.Since(t1)),
+				logger.Int("status", ww.Status()),
 			)
 		})
 	}

@@ -44,10 +44,10 @@ func (r *Router) GetTopics() []string {
 	return topics
 }
 
-func getRouter(logger Logger) *Router {
+func getRouter() *Router {
 	r := NewRouter()
 
-	r.Register("user.add", handler.NewUserCreatedHandler(logger))
+	r.Register("user.add", handler.NewUserCreatedHandler())
 
 	return r
 }

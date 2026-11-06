@@ -7,6 +7,7 @@ import (
 	"log"
 	"marketing/internal/infrastructure/database"
 	"marketing/internal/infrastructure/telemetry"
+	"marketing/internal/infrastructure/telemetry/logger"
 	"marketing/internal/repository"
 	"marketing/internal/service"
 	"marketing/internal/usecase"
@@ -26,7 +27,6 @@ import (
 type App struct {
 	httpServer *http.Server
 	pgConn     *database.Postgres
-	logger     *telemetry.Logger
 	tracer     *telemetry.Tracer
 	metrics    *telemetry.Metrics
 }
@@ -46,7 +46,13 @@ func NewApp(
 
 	log.Println("Database connection established successfully")
 
-	customLogger := telemetry.NewLogger(cfg.Logger)
+	err = logger.InitLogger(cfg.Logger)
+	if err != nil {
+		return nil, fmt.Errorf(
+			"logger init failed: %w",
+			err,
+		)
+	}
 
 	tracer, err := telemetry.NewTracer(
 		ctx,
@@ -78,7 +84,6 @@ func NewApp(
 
 	router := transportHTTP.GetRouter(
 		pgConn,
-		customLogger,
 		cfg.Service,
 		userUseCase,
 	)
@@ -92,7 +97,6 @@ func NewApp(
 	return &App{
 		httpServer: srv,
 		pgConn:     pgConn,
-		logger:     customLogger,
 		tracer:     tracer,
 		metrics:    metrics,
 	}, nil

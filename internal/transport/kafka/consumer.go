@@ -3,6 +3,7 @@ package kafka
 import (
 	"context"
 	"fmt"
+	"marketing/internal/infrastructure/telemetry/logger"
 	"marketing/internal/transport/kafka/message"
 	"time"
 
@@ -17,14 +18,12 @@ type Consumer struct {
 	consumer    *kafka.Consumer
 	tracer      Tracer
 	readTimeout time.Duration
-	logger      Logger
 	metadata    *kafka.Metadata
 	router      *Router
 }
 
 func NewConsumer(
 	cfg config.KafkaConsumerConfig,
-	logger Logger,
 	tracer Tracer,
 ) (*Consumer, error) {
 	c, err := kafka.NewConsumer(&kafka.ConfigMap{
@@ -49,9 +48,8 @@ func NewConsumer(
 	return &Consumer{
 		consumer:    c,
 		readTimeout: cfg.ReadTimeout,
-		logger:      logger,
 		metadata:    metadata,
-		router:      getRouter(logger),
+		router:      getRouter(),
 		tracer:      tracer,
 	}, nil
 }
@@ -71,21 +69,18 @@ func (c *Consumer) Start(
 		return fmt.Errorf("failed to subscribe to topics: %w", err)
 	}
 
-	c.logger.Info(
+	logger.Info(
 		ctx,
 		"subscribed to topics. Starting poll loop...",
-		map[string]any{
-			"topics": topics,
-		},
+		logger.Strings("topics", topics),
 	)
 
 	for {
 		select {
 		case <-ctx.Done():
-			c.logger.Info(
+			logger.Info(
 				ctx,
 				"received shutdown signal, stopping poll loop...",
-				nil,
 			)
 
 			return nil
@@ -95,12 +90,10 @@ func (c *Consumer) Start(
 					c.readTimeout,
 				)
 				if msgErr != nil {
-					c.logger.Error(
+					logger.Error(
 						ctx,
 						"message getting error",
-						map[string]any{
-							"error": msgErr,
-						},
+						logger.ErrorField(msgErr),
 					)
 
 					return
@@ -132,12 +125,10 @@ func (c *Consumer) Start(
 
 				err = c.router.Route(consumerCtx, internalMsg)
 				if err != nil {
-					c.logger.Error(
+					logger.Error(
 						ctx,
 						"message routing error",
-						map[string]any{
-							"error": err,
-						},
+						logger.ErrorField(err),
 					)
 				}
 			}()
@@ -146,10 +137,9 @@ func (c *Consumer) Start(
 }
 
 func (c *Consumer) Close(ctx context.Context) error {
-	c.logger.Info(
+	logger.Info(
 		ctx,
 		"closing consumer and committing offsets...",
-		nil,
 	)
 
 	return c.consumer.Close()

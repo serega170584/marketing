@@ -19,9 +19,9 @@ type Metrics struct {
 	provider    *sdkmetric.MeterProvider
 }
 
+//nolint:gochecknoglobals
 var httpRequestsTotal metric.Int64Counter
 
-//nolint:exhaustruct_v5
 func NewMetrics(
 	ctx context.Context,
 	serviceName string,
@@ -60,7 +60,7 @@ func NewMetrics(
 		provider:    mp,
 	}
 
-	initCustomMetricsErr := m.initCustomMetrics()
+	initCustomMetricsErr := initCustomMetrics()
 	if initCustomMetricsErr != nil {
 		return nil, fmt.Errorf(
 			"failed to initialize custom metrics: %w",
@@ -71,7 +71,7 @@ func NewMetrics(
 	return m, nil
 }
 
-func (m *Metrics) initCustomMetrics() error {
+func initCustomMetrics() error {
 	meter := otel.Meter(serviceName)
 
 	var err error

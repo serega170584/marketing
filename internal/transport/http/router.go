@@ -2,7 +2,6 @@ package http
 
 import (
 	"marketing/internal/config"
-	"marketing/internal/infrastructure/telemetry"
 	"marketing/internal/usecase"
 	"net/http"
 
@@ -26,13 +25,12 @@ type ApiServer struct {
 func newRouter(
 	userHandler *handler.UserHandler,
 	orderHandler *handler.OrderHandler,
-	customLogger Logger,
 	serviceCfg config.ServiceConfig,
 ) http.Handler {
 	r := chi.NewRouter()
 
 	r.Use(custom_middleware.TraceIDMiddleware)
-	r.Use(custom_middleware.LoggerMiddleware(customLogger))
+	r.Use(custom_middleware.LoggerMiddleware())
 	r.Use(middleware.Recoverer)
 
 	r.Use(func(next http.Handler) http.Handler {
@@ -60,14 +58,12 @@ func newRouter(
 
 func GetRouter(
 	pgConn *database.Postgres,
-	logger *telemetry.Logger,
 	serviceCfg config.ServiceConfig,
 	userUseCase *usecase.UserUseCase,
 ) http.Handler {
 	userHandler := handler.NewUserHandler(
 		pgConn,
 		userUseCase,
-		logger,
 	)
 
 	orderHandler := handler.NewOrderHandler(pgConn)
@@ -75,7 +71,6 @@ func GetRouter(
 	return newRouter(
 		userHandler,
 		orderHandler,
-		logger,
 		serviceCfg,
 	)
 }

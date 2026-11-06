@@ -16,7 +16,6 @@ import (
 
 type CliApp struct {
 	consumer *kafka.Consumer
-	logger   *telemetry.Logger
 	tracer   *telemetry.Tracer
 	metrics  *telemetry.Metrics
 }
@@ -30,11 +29,7 @@ func NewCliApp(
 ) {
 	var err error
 
-	var customLogger *telemetry.Logger
-
 	var consumer *kafka.Consumer
-
-	customLogger = telemetry.NewLogger(cfg.Logger)
 
 	tracer, err := telemetry.NewTracer(
 		ctx,
@@ -56,7 +51,6 @@ func NewCliApp(
 
 	consumer, err = kafka.NewConsumer(
 		cfg.KafkaConsumer,
-		customLogger,
 		tracer,
 	)
 	if err != nil {
@@ -65,7 +59,6 @@ func NewCliApp(
 
 	return &CliApp{
 		consumer: consumer,
-		logger:   customLogger,
 		tracer:   tracer,
 		metrics:  metrics,
 	}, nil

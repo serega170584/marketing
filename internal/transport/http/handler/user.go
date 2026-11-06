@@ -5,6 +5,7 @@ import (
 	"errors"
 	"marketing/internal/infrastructure/database"
 	"marketing/internal/infrastructure/telemetry"
+	"marketing/internal/infrastructure/telemetry/logger"
 	"marketing/internal/usecase"
 	"net/http"
 
@@ -16,18 +17,15 @@ import (
 type UserHandler struct {
 	pgConn      *database.Postgres
 	userUseCase *usecase.UserUseCase
-	logger      *telemetry.Logger
 }
 
 func NewUserHandler(
 	pgConn *database.Postgres,
 	userUseCase *usecase.UserUseCase,
-	logger *telemetry.Logger,
 ) *UserHandler {
 	return &UserHandler{
 		pgConn:      pgConn,
 		userUseCase: userUseCase,
-		logger:      logger,
 	}
 }
 
@@ -120,9 +118,11 @@ func (h *UserHandler) GetUserById(
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
 
-		h.logger.Error(ctx, "getUserByIdHandler: failed to get user by id", map[string]any{
-			"error": err,
-		})
+		logger.Error(
+			ctx,
+			"getUserByIdHandler: failed to get user by id",
+			logger.ErrorField(err),
+		)
 
 		_ = json.NewEncoder(w).Encode(api.ErrorResponse{Error: "Internal server error"})
 
