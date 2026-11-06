@@ -17,9 +17,9 @@ const serviceName = "marketing"
 type Metrics struct {
 	serviceName string
 	provider    *sdkmetric.MeterProvider
-
-	HttpRequestsTotal metric.Int64Counter
 }
+
+var httpRequestsTotal metric.Int64Counter
 
 //nolint:exhaustruct_v5
 func NewMetrics(
@@ -76,7 +76,7 @@ func (m *Metrics) initCustomMetrics() error {
 
 	var err error
 
-	m.HttpRequestsTotal, err = meter.Int64Counter(
+	httpRequestsTotal, err = meter.Int64Counter(
 		"http_requests_total",
 		metric.WithDescription("Total number of HTTP requests"),
 	)
@@ -85,6 +85,10 @@ func (m *Metrics) initCustomMetrics() error {
 	}
 
 	return nil
+}
+
+func IncHTTPRequestTotal() {
+	httpRequestsTotal.Add(context.Background(), 1)
 }
 
 func (m *Metrics) Shutdown(

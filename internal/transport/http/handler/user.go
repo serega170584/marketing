@@ -104,6 +104,8 @@ func (h *UserHandler) GetUserById(
 ) {
 	ctx := r.Context()
 
+	telemetry.IncHTTPRequestTotal()
+
 	user, err := h.userUseCase.GetUserByID(ctx, id)
 
 	if errors.Is(err, usecase.ErrUserNotFound) {
