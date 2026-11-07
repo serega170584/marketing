@@ -25,6 +25,20 @@ services:
       - "--httpListenAddr=:8428"
     restart: unless-stopped
 
+  vector:
+    image: timberio/vector:0.61.0-alpine
+    container_name: vector-agent
+    restart: unless-stopped
+    volumes:
+      - ./vector.yaml:/etc/vector/vector.yaml:ro
+      - ./logs:/var/log/marketing:ro
+      - vector-data:/var/lib/vector
+    command:
+      - --config
+      - /etc/vector/vector.yaml
+    depends_on:
+      - victoria-logs
+
   victoria-logs:
     image: victoriametrics/victoria-logs:latest
     container_name: victoria-logs
@@ -128,3 +142,4 @@ volumes:
   pgdata:
   kafkadata:
   vtdata:
+  vector-data:

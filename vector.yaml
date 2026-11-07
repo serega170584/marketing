@@ -1,0 +1,29 @@
+data_dir: /var/lib/vector
+
+sources:
+  go_app:
+    type: file
+    include:
+      - /var/log/marketing/*.log
+    read_from: end
+
+transforms:
+  parse_json:
+    type: remap
+    inputs:
+      - go_app
+    source: |
+      . = parse_json!(.message)
+
+sinks:
+  victoria_logs:
+    type: elasticsearch
+    inputs:
+      - parse_json
+    endpoints:
+      - http://victoria-logs:9428/insert/elasticsearch/
+    mode: bulk
+    api_version: v8
+    query:
+      _msg_field: msg
+      _time_field: timestamp

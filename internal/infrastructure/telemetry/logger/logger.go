@@ -3,6 +3,7 @@ package logger
 import (
 	"context"
 	"fmt"
+	"log"
 	"marketing/internal/config"
 	"marketing/pkg/contextutil"
 	"os"
@@ -24,11 +25,15 @@ func InitLogger(cfg config.LoggerConfig) error {
 	switch cfg.Env {
 	case "dev", "local":
 		devConfig := zap.NewDevelopmentEncoderConfig()
+		devConfig.TimeKey = "time"
+		devConfig.LevelKey = "level"
+		devConfig.CallerKey = "caller"
+		devConfig.MessageKey = "msg"
 		devConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
 		devConfig.EncodeTime = zapcore.TimeEncoderOfLayout("15:04:05")
 
 		logger = zap.New(zapcore.NewCore(
-			zapcore.NewConsoleEncoder(devConfig),
+			zapcore.NewJSONEncoder(devConfig),
 			zapcore.AddSync(os.Stdout),
 			zap.DebugLevel,
 		), zap.AddCaller(), zap.AddCallerSkip(1))
@@ -44,10 +49,12 @@ func InitLogger(cfg config.LoggerConfig) error {
 
 	zap.ReplaceGlobals(logger)
 
-	err := logger.Sync()
-	if err != nil {
-		return fmt.Errorf("invalid sync: %w", err)
-	}
+	defer func() {
+		err := logger.Sync()
+		if err != nil {
+			log.Printf("invalid sync: %v", err)
+		}
+	}()
 
 	return nil
 }

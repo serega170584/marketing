@@ -56,3 +56,7 @@ migrate-down: ## Откатить последнюю миграцию базы �
 migrate-create: ## Создать новую пару файлов миграций (Использование: make migrate-create NAME=имя_миграции)
 	@if [ -z "$(NAME)" ]; then echo "Error: NAME variable is required. Example: make migrate-create NAME=create_users_table"; exit 1; fi
 	go run cmd/migrator/main.go create $(NAME)
+
+run:
+	go build -o bin/marketing ./cmd/server
+	./bin/marketing 2>&1 | tee -a logs/app.log
