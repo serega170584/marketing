@@ -1,6 +1,7 @@
 package http
 
 import (
+	"context"
 	"marketing/internal/config"
 	"marketing/internal/usecase"
 	"net/http"
@@ -31,6 +32,7 @@ func newRouter(
 
 	r.Use(custom_middleware.TraceIDMiddleware)
 	r.Use(custom_middleware.LoggerMiddleware())
+	r.Use(custom_middleware.AuthMiddleware())
 	r.Use(middleware.Recoverer)
 
 	r.Use(func(next http.Handler) http.Handler {
@@ -57,6 +59,7 @@ func newRouter(
 }
 
 func GetRouter(
+	ctx context.Context,
 	pgConn *database.Postgres,
 	serviceCfg config.ServiceConfig,
 	userUseCase *usecase.UserUseCase,

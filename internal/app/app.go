@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"marketing/internal/auth"
 	"marketing/internal/infrastructure/database"
 	"marketing/internal/infrastructure/telemetry"
 	"marketing/internal/infrastructure/telemetry/logger"
@@ -36,6 +37,11 @@ func NewApp(
 	ctx context.Context,
 	cfg *config.Config,
 ) (*App, error) {
+	err := auth.LoadPublicKey("public.pem")
+	if err != nil {
+		return nil, fmt.Errorf("load public key error: %w", err)
+	}
+
 	pgConn, err := database.New(
 		ctx,
 		cfg.DB,
@@ -83,6 +89,7 @@ func NewApp(
 	)
 
 	router := transportHTTP.GetRouter(
+		ctx,
 		pgConn,
 		cfg.Service,
 		userUseCase,

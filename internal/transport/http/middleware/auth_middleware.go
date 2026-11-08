@@ -2,20 +2,22 @@ package middleware
 
 import (
 	"context"
-	"crypto/ecdsa"
 	"marketing/internal/auth"
+	"marketing/internal/infrastructure/telemetry/logger"
 	"net/http"
 	"strings"
 )
 
-func AuthMiddleware(
-	publicKey *ecdsa.PublicKey,
-) func(http.Handler) http.Handler {
+func AuthMiddleware() func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(
 			w http.ResponseWriter,
 			r *http.Request,
 		) {
+			requestCtx := r.Context()
+
+			publicKey := auth.GetPublicKey()
+
 			authHeader := r.Header.Get("Authorization")
 
 			parts := strings.SplitN(authHeader, " ", 2)
@@ -23,6 +25,8 @@ func AuthMiddleware(
 			if len(parts) != 2 ||
 				!strings.EqualFold(parts[0], "Bearer") ||
 				parts[1] == "" {
+				logger.Error(requestCtx, "invalid authorization header")
+
 				http.Error(
 					w,
 					"Unauthorized",
@@ -37,6 +41,12 @@ func AuthMiddleware(
 				publicKey,
 			)
 			if err != nil {
+				logger.Error(
+					requestCtx,
+					"invalid token",
+					logger.ErrorField(err),
+				)
+
 				http.Error(
 					w,
 					"Invalid token",
@@ -47,7 +57,7 @@ func AuthMiddleware(
 			}
 
 			ctx := context.WithValue(
-				r.Context(),
+				requestCtx,
 				claimsContextKey{},
 				claims,
 			)
