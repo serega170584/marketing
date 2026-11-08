@@ -69,6 +69,7 @@ func GenerateJWT(privateKey *ecdsa.PrivateKey) (
 	error,
 ) {
 	claims := jwt.MapClaims{
+		"iss": "marketing-api",
 		"exp": time.Now().Add(15 * time.Minute).Unix(),
 		"permissions": []string{
 			"users:read",

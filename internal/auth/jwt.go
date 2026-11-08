@@ -10,6 +10,8 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+const marketingAPIIssuer = "marketing-api"
+
 //nolint:gochecknoglobals
 var publicKey *ecdsa.PublicKey
 
@@ -33,7 +35,7 @@ func ValidateJWT(
 
 			return publicKey, nil
 		},
-		jwt.WithIssuer("marketing-api"),
+		jwt.WithIssuer(marketingAPIIssuer),
 	)
 	if err != nil {
 		return nil, err
