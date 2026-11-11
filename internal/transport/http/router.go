@@ -20,12 +20,18 @@ import (
 type ApiServer struct {
 	*handler.UserHandler
 	*handler.OrderHandler
+	*handler.PromoCodeHandler
+	*handler.PromoRedemptionHandler
+	*handler.PromotionHandler
 }
 
 //nolint:exhaustruct_v5
 func newRouter(
 	userHandler *handler.UserHandler,
 	orderHandler *handler.OrderHandler,
+	promoCodeHandler *handler.PromoCodeHandler,
+	promoRedemptionHandler *handler.PromoRedemptionHandler,
+	promotionHandler *handler.PromotionHandler,
 	serviceCfg config.ServiceConfig,
 ) http.Handler {
 	r := chi.NewRouter()
@@ -48,8 +54,11 @@ func newRouter(
 	})
 
 	apiServer := &ApiServer{
-		UserHandler:  userHandler,
-		OrderHandler: orderHandler,
+		UserHandler:            userHandler,
+		OrderHandler:           orderHandler,
+		PromoCodeHandler:       promoCodeHandler,
+		PromoRedemptionHandler: promoRedemptionHandler,
+		PromotionHandler:       promotionHandler,
 	}
 
 	return api.HandlerWithOptions(apiServer, api.ChiServerOptions{
@@ -71,9 +80,18 @@ func GetRouter(
 
 	orderHandler := handler.NewOrderHandler(pgConn)
 
+	promoCodeHandler := handler.NewPromoCodeHandler(pgConn)
+
+	promoRedemptionHandler := handler.NewPromoRedemptionHandler(pgConn)
+
+	promotionHandler := handler.NewPromotionHandler(pgConn)
+
 	return newRouter(
 		userHandler,
 		orderHandler,
+		promoCodeHandler,
+		promoRedemptionHandler,
+		promotionHandler,
 		serviceCfg,
 	)
 }
