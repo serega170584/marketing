@@ -75,8 +75,8 @@ func (h *PromoRedemptionHandler) RedeemPromoCode(
 	_ = json.NewEncoder(w).Encode(api.PromoRedemptionResponse{
 		Id:             id,
 		PromotionId:    uuid.MustParse("11111111-1111-1111-1111-111111111111"),
-		UserId:         1,
-		OrderId:        42,
+		UserId:         uuid.MustParse("11111111-1111-1111-1111-111111111111"),
+		OrderId:        uuid.MustParse("11111111-1111-1111-1111-111111111111"),
 		DiscountAmount: 2000,
 		Status:         "REDEEMED",
 		CreatedAt:      time.Now(),
@@ -103,8 +103,8 @@ func (h *PromoRedemptionHandler) ReleasePromoCode(
 	_ = json.NewEncoder(w).Encode(api.PromoRedemptionResponse{
 		Id:             id,
 		PromotionId:    uuid.MustParse("11111111-1111-1111-1111-111111111111"),
-		UserId:         1,
-		OrderId:        42,
+		UserId:         uuid.MustParse("11111111-1111-1111-1111-111111111111"),
+		OrderId:        uuid.MustParse("11111111-1111-1111-1111-111111111111"),
 		DiscountAmount: 2000,
 		Status:         "RELEASED",
 		CreatedAt:      time.Now(),
@@ -120,8 +120,8 @@ func (h *PromoRedemptionHandler) GetPromoRedemptions(
 		{
 			Id:             uuid.MustParse("33333333-3333-3333-3333-333333333333"),
 			PromotionId:    uuid.MustParse("11111111-1111-1111-1111-111111111111"),
-			UserId:         1,
-			OrderId:        42,
+			UserId:         uuid.MustParse("11111111-1111-1111-1111-111111111111"),
+			OrderId:        uuid.MustParse("11111111-1111-1111-1111-111111111111"),
 			DiscountAmount: 2000,
 			Status:         api.PromoRedemptionStatus("REDEEMED"),
 			CreatedAt:      time.Now(),

@@ -9,9 +9,6 @@ import (
 	"marketing/internal/infrastructure/database"
 	"marketing/internal/infrastructure/telemetry"
 	"marketing/internal/infrastructure/telemetry/logger"
-	"marketing/internal/repository"
-	"marketing/internal/service"
-	"marketing/internal/usecase"
 	"net/http"
 	"os"
 	"os/signal"
@@ -78,21 +75,9 @@ func NewApp(
 		return nil, fmt.Errorf("metrics init failed: %w", err)
 	}
 
-	userRepo := repository.NewUserRepo(pgConn)
-
-	userService := service.NewUserService(
-		userRepo,
-	)
-
-	userUseCase := usecase.NewUserUseCase(
-		userService,
-	)
-
 	router := transportHTTP.GetRouter(
-		ctx,
 		pgConn,
 		cfg.Service,
-		userUseCase,
 	)
 
 	srv := &http.Server{

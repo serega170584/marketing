@@ -1,174 +1,33 @@
+
 openapi: 3.0.0
 
 info:
-  title: Marketing User, Order & Promotion API
-  description: API for managing users, orders, promotions and promo codes.
+  title: Marketing Promo API
+  description: API for managing promotions, promo codes and promo redemptions.
   version: 1.0.0
 
 servers:
   - url: http://localhost:8080/api/v1
     description: Local development server
 
+tags:
+  - name: Promotions
+    description: Promotion management
+  - name: Promo Codes
+    description: Promo code management
+  - name: Promo Redemptions
+    description: Promo code reservation and redemption management
+
 paths:
 
-  /users:
-    post:
-      summary: Create a new user
-      operationId: createUser
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateUserRequest'
-      responses:
-        '201':
-          description: User successfully created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CreateUserResponse'
-        '400':
-          $ref: '#/components/responses/BadRequestError'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-    get:
-      summary: Get user list
-      operationId: getUsers
-      responses:
-        '200':
-          description: Successfully fetched user list
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/UserResponse'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-
-  /users/{id}:
-    get:
-      summary: Get user by ID
-      operationId: getUserById
-      parameters:
-        - name: id
-          in: path
-          required: true
-          description: The unique identifier of the user
-          schema:
-            type: integer
-            format: uint64
-      responses:
-        '200':
-          description: Successfully fetched user details
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UserResponse'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-    put:
-      summary: Update an existing user by ID
-      operationId: updateUser
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: uint64
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdateUserRequest'
-      responses:
-        '200':
-          description: User successfully updated
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UserResponse'
-        '400':
-          $ref: '#/components/responses/BadRequestError'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-
-  /orders:
-    post:
-      summary: Create a new order
-      operationId: createOrder
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateOrderRequest'
-      responses:
-        '201':
-          description: Order successfully created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CreateOrderResponse'
-        '400':
-          $ref: '#/components/responses/BadRequestError'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-    get:
-      summary: Get order list
-      operationId: getOrders
-      responses:
-        '200':
-          description: Successfully fetched order list
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/OrderResponse'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-
-  /orders/{id}:
-    put:
-      summary: Update an existing order by ID
-      operationId: updateOrder
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: uint64
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdateOrderRequest'
-      responses:
-        '200':
-          description: Order successfully updated
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OrderResponse'
-        '400':
-          $ref: '#/components/responses/BadRequestError'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+  # =========================
+  # PROMOTIONS
+  # =========================
 
   /promotions:
     post:
+      tags:
+        - Promotions
       summary: Create a new promotion
       operationId: createPromotion
       requestBody:
@@ -190,6 +49,8 @@ paths:
           $ref: '#/components/responses/InternalServerError'
 
     get:
+      tags:
+        - Promotions
       summary: Get promotions list
       operationId: getPromotions
       responses:
@@ -205,14 +66,23 @@ paths:
           $ref: '#/components/responses/InternalServerError'
 
   /promotions/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Promotion UUID
+        schema:
+          type: string
+          format: uuid
+
     get:
+      tags:
+        - Promotions
       summary: Get promotion by ID
       operationId: getPromotionById
-      parameters:
-        - $ref: '#/components/parameters/UuidId'
       responses:
         '200':
-          description: Promotion details
+          description: Successfully fetched promotion
           content:
             application/json:
               schema:
@@ -223,10 +93,10 @@ paths:
           $ref: '#/components/responses/InternalServerError'
 
     put:
+      tags:
+        - Promotions
       summary: Update promotion
       operationId: updatePromotion
-      parameters:
-        - $ref: '#/components/parameters/UuidId'
       requestBody:
         required: true
         content:
@@ -247,12 +117,14 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
-  # ==========================================
-  # PROMO CODES ENDPOINTS
-  # ==========================================
+  # =========================
+  # PROMO CODES
+  # =========================
 
   /promo-codes:
     post:
+      tags:
+        - Promo Codes
       summary: Create a new promo code
       operationId: createPromoCode
       requestBody:
@@ -270,16 +142,27 @@ paths:
                 $ref: '#/components/schemas/PromoCodeResponse'
         '400':
           $ref: '#/components/responses/BadRequestError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '409':
+          description: Promo code already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           $ref: '#/components/responses/InternalServerError'
 
     get:
+      tags:
+        - Promo Codes
       summary: Get promo codes list
       operationId: getPromoCodes
       parameters:
         - name: promotion_id
           in: query
           required: false
+          description: Filter promo codes by promotion UUID
           schema:
             type: string
             format: uuid
@@ -296,14 +179,23 @@ paths:
           $ref: '#/components/responses/InternalServerError'
 
   /promo-codes/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Promo code UUID
+        schema:
+          type: string
+          format: uuid
+
     get:
+      tags:
+        - Promo Codes
       summary: Get promo code by ID
       operationId: getPromoCodeById
-      parameters:
-        - $ref: '#/components/parameters/UuidId'
       responses:
         '200':
-          description: Promo code details
+          description: Successfully fetched promo code
           content:
             application/json:
               schema:
@@ -313,12 +205,14 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
-  # ==========================================
-  # PROMO REDEMPTIONS ENDPOINTS
-  # ==========================================
+  # =========================
+  # PROMO REDEMPTIONS
+  # =========================
 
   /promo-redemptions:
     get:
+      tags:
+        - Promo Redemptions
       summary: Get promo redemptions list
       operationId: getPromoRedemptions
       parameters:
@@ -326,8 +220,8 @@ paths:
           in: query
           required: false
           schema:
-            type: integer
-            format: uint64
+            type: string
+            format: uuid
         - name: promotion_id
           in: query
           required: false
@@ -338,8 +232,8 @@ paths:
           in: query
           required: false
           schema:
-            type: integer
-            format: uint64
+            type: string
+            format: uuid
         - name: status
           in: query
           required: false
@@ -359,7 +253,10 @@ paths:
 
   /promo-redemptions/reserve:
     post:
-      summary: Reserve a promo code for an order
+      tags:
+        - Promo Redemptions
+      summary: Reserve promo code
+      description: Creates a promo redemption with RESERVED status.
       operationId: reservePromoCode
       requestBody:
         required: true
@@ -378,15 +275,31 @@ paths:
           $ref: '#/components/responses/BadRequestError'
         '404':
           $ref: '#/components/responses/NotFoundError'
+        '409':
+          description: Promo code cannot be reserved because a usage limit has been reached or it is unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           $ref: '#/components/responses/InternalServerError'
 
   /promo-redemptions/{id}/redeem:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Promo redemption UUID
+        schema:
+          type: string
+          format: uuid
+
     post:
-      summary: Confirm promo code redemption
+      tags:
+        - Promo Redemptions
+      summary: Redeem reserved promo code
+      description: Changes redemption status from RESERVED to REDEEMED.
       operationId: redeemPromoCode
-      parameters:
-        - $ref: '#/components/parameters/UuidId'
       responses:
         '200':
           description: Promo code successfully redeemed
@@ -394,19 +307,33 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PromoRedemptionResponse'
-        '400':
-          $ref: '#/components/responses/BadRequestError'
         '404':
           $ref: '#/components/responses/NotFoundError'
+        '409':
+          description: Redemption is not in RESERVED status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           $ref: '#/components/responses/InternalServerError'
 
   /promo-redemptions/{id}/release:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Promo redemption UUID
+        schema:
+          type: string
+          format: uuid
+
     post:
+      tags:
+        - Promo Redemptions
       summary: Release reserved promo code
+      description: Changes redemption status from RESERVED to RELEASED.
       operationId: releasePromoCode
-      parameters:
-        - $ref: '#/components/parameters/UuidId'
       responses:
         '200':
           description: Promo reservation successfully released
@@ -414,173 +341,52 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PromoRedemptionResponse'
-        '400':
-          $ref: '#/components/responses/BadRequestError'
         '404':
           $ref: '#/components/responses/NotFoundError'
+        '409':
+          description: Redemption is not in RESERVED status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           $ref: '#/components/responses/InternalServerError'
 
-
 components:
 
-  parameters:
-    UuidId:
-      name: id
-      in: path
-      required: true
-      description: UUID identifier
-      schema:
-        type: string
-        format: uuid
+  # =========================
+  # RESPONSES
+  # =========================
 
   responses:
     BadRequestError:
-      description: Invalid request body or payload validation failure
+      description: Invalid request body or validation failure
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorResponse'
+
     NotFoundError:
-      description: The specified resource was not found
+      description: Resource not found
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorResponse'
+
     InternalServerError:
-      description: Internal server error occurred while executing operation
+      description: Internal server error
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorResponse'
+
+  # =========================
+  # SCHEMAS
+  # =========================
 
   schemas:
 
-    CreateUserRequest:
-      type: object
-      required:
-        - name
-        - email
-      properties:
-        name:
-          type: string
-          example: John Doe
-        email:
-          type: string
-          format: email
-          example: john.doe@example.com
-
-    CreateUserResponse:
-      type: object
-      required:
-        - status
-        - message
-      properties:
-        status:
-          type: string
-          example: success
-        message:
-          type: string
-          example: User created
-
-    UpdateUserRequest:
-      type: object
-      required:
-        - name
-        - email
-      properties:
-        name:
-          type: string
-          example: John Smith
-        email:
-          type: string
-          format: email
-          example: john.smith@example.com
-
-    UserResponse:
-      type: object
-      required:
-        - id
-        - name
-        - email
-      properties:
-        id:
-          type: integer
-          format: uint64
-          example: 1
-        name:
-          type: string
-          example: John Doe
-        email:
-          type: string
-          format: email
-          example: john.doe@example.com
-
-    CreateOrderRequest:
-      type: object
-      required:
-        - user_id
-        - total_amount
-      properties:
-        user_id:
-          type: integer
-          format: uint64
-          example: 1
-        total_amount:
-          type: number
-          format: float
-          example: 99.99
-
-    CreateOrderResponse:
-      type: object
-      required:
-        - status
-        - message
-      properties:
-        status:
-          type: string
-          example: success
-        message:
-          type: string
-          example: Order created
-
-    UpdateOrderRequest:
-      type: object
-      required:
-        - status
-        - total_amount
-      properties:
-        status:
-          type: string
-          example: processing
-        total_amount:
-          type: number
-          format: float
-          example: 120.50
-
-    OrderResponse:
-      type: object
-      required:
-        - id
-        - user_id
-        - status
-        - total_amount
-      properties:
-        id:
-          type: integer
-          format: uint64
-          example: 42
-        user_id:
-          type: integer
-          format: uint64
-          example: 1
-        status:
-          type: string
-          example: pending
-        total_amount:
-          type: number
-          format: float
-          example: 99.99
+    # PROMOTION ENUMS
 
     PromotionDiscountType:
       type: string
@@ -600,6 +406,8 @@ components:
         - RESERVED
         - REDEEMED
         - RELEASED
+
+    # PROMOTIONS
 
     CreatePromotionRequest:
       type: object
@@ -621,8 +429,10 @@ components:
         discount_value:
           type: integer
           example: 20
+          description: Percentage or fixed discount value
         max_discount:
           type: integer
+          format: int32
           example: 100
         max_uses:
           type: integer
@@ -631,45 +441,17 @@ components:
         starts_at:
           type: string
           format: date-time
-          example: '2026-06-01T00:00:00Z'
+          example: "2026-06-01T00:00:00Z"
         expires_at:
           type: string
           format: date-time
-          example: '2026-06-30T23:59:59Z'
+          example: "2026-12-31T23:59:59Z"
         status:
           $ref: '#/components/schemas/PromotionStatus'
 
     UpdatePromotionRequest:
-      type: object
-      required:
-        - name
-        - discount_type
-        - discount_value
-        - max_discount
-        - max_uses
-        - starts_at
-        - expires_at
-        - status
-      properties:
-        name:
-          type: string
-        discount_type:
-          $ref: '#/components/schemas/PromotionDiscountType'
-        discount_value:
-          type: integer
-        max_discount:
-          type: integer
-        max_uses:
-          type: integer
-          format: int64
-        starts_at:
-          type: string
-          format: date-time
-        expires_at:
-          type: string
-          format: date-time
-        status:
-          $ref: '#/components/schemas/PromotionStatus'
+      allOf:
+        - $ref: '#/components/schemas/CreatePromotionRequest'
 
     PromotionResponse:
       type: object
@@ -688,20 +470,27 @@ components:
         id:
           type: string
           format: uuid
+          example: "11111111-1111-1111-1111-111111111111"
         name:
           type: string
+          example: Summer Sale
         discount_type:
           $ref: '#/components/schemas/PromotionDiscountType'
         discount_value:
           type: integer
+          example: 20
         max_discount:
           type: integer
+          format: int32
+          example: 100
         max_uses:
           type: integer
           format: int64
+          example: 1000
         used_count:
           type: integer
           format: int64
+          example: 150
         starts_at:
           type: string
           format: date-time
@@ -710,6 +499,8 @@ components:
           format: date-time
         status:
           $ref: '#/components/schemas/PromotionStatus'
+
+    # PROMO CODES
 
     CreatePromoCodeRequest:
       type: object
@@ -724,6 +515,7 @@ components:
         promotion_id:
           type: string
           format: uuid
+          example: "11111111-1111-1111-1111-111111111111"
         max_uses_per_user:
           type: integer
           format: int64
@@ -740,6 +532,7 @@ components:
         id:
           type: string
           format: uuid
+          example: "22222222-2222-2222-2222-222222222222"
         code:
           type: string
           example: SUMMER2026
@@ -749,6 +542,9 @@ components:
         max_uses_per_user:
           type: integer
           format: int64
+          example: 1
+
+    # PROMO REDEMPTIONS
 
     ReservePromoRequest:
       type: object
@@ -761,13 +557,13 @@ components:
           type: string
           example: SUMMER2026
         user_id:
-          type: integer
-          format: uint64
-          example: 1
+          type: string
+          format: uuid
+          example: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
         order_id:
-          type: integer
-          format: uint64
-          example: 42
+          type: string
+          format: uuid
+          example: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"
 
     PromoRedemptionResponse:
       type: object
@@ -783,15 +579,16 @@ components:
         id:
           type: string
           format: uuid
+          example: "33333333-3333-3333-3333-333333333333"
         promotion_id:
           type: string
           format: uuid
         user_id:
-          type: integer
-          format: uint64
+          type: string
+          format: uuid
         order_id:
-          type: integer
-          format: uint64
+          type: string
+          format: uuid
         discount_amount:
           type: integer
           format: int64
@@ -801,6 +598,8 @@ components:
         created_at:
           type: string
           format: date-time
+
+    # SYSTEM
 
     ErrorResponse:
       type: object

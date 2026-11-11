@@ -39,18 +39,6 @@ const (
 	DISABLED PromotionStatus = "DISABLED"
 )
 
-// CreateOrderRequest defines model for CreateOrderRequest.
-type CreateOrderRequest struct {
-	TotalAmount float32 `json:"total_amount"`
-	UserId      uint64  `json:"user_id"`
-}
-
-// CreateOrderResponse defines model for CreateOrderResponse.
-type CreateOrderResponse struct {
-	Message string `json:"message"`
-	Status  string `json:"status"`
-}
-
 // CreatePromoCodeRequest defines model for CreatePromoCodeRequest.
 type CreatePromoCodeRequest struct {
 	Code           string             `json:"code"`
@@ -60,39 +48,21 @@ type CreatePromoCodeRequest struct {
 
 // CreatePromotionRequest defines model for CreatePromotionRequest.
 type CreatePromotionRequest struct {
-	DiscountType  PromotionDiscountType `json:"discount_type"`
-	DiscountValue int                   `json:"discount_value"`
-	ExpiresAt     time.Time             `json:"expires_at"`
-	MaxDiscount   int                   `json:"max_discount"`
-	MaxUses       int64                 `json:"max_uses"`
-	Name          string                `json:"name"`
-	StartsAt      time.Time             `json:"starts_at"`
-	Status        PromotionStatus       `json:"status"`
-}
+	DiscountType PromotionDiscountType `json:"discount_type"`
 
-// CreateUserRequest defines model for CreateUserRequest.
-type CreateUserRequest struct {
-	Email openapi_types.Email `json:"email"`
-	Name  string              `json:"name"`
-}
-
-// CreateUserResponse defines model for CreateUserResponse.
-type CreateUserResponse struct {
-	Message string `json:"message"`
-	Status  string `json:"status"`
+	// DiscountValue Percentage or fixed discount value
+	DiscountValue int             `json:"discount_value"`
+	ExpiresAt     time.Time       `json:"expires_at"`
+	MaxDiscount   int32           `json:"max_discount"`
+	MaxUses       int64           `json:"max_uses"`
+	Name          string          `json:"name"`
+	StartsAt      time.Time       `json:"starts_at"`
+	Status        PromotionStatus `json:"status"`
 }
 
 // ErrorResponse defines model for ErrorResponse.
 type ErrorResponse struct {
 	Error string `json:"error"`
-}
-
-// OrderResponse defines model for OrderResponse.
-type OrderResponse struct {
-	Id          uint64  `json:"id"`
-	Status      string  `json:"status"`
-	TotalAmount float32 `json:"total_amount"`
-	UserId      uint64  `json:"user_id"`
 }
 
 // PromoCodeResponse defines model for PromoCodeResponse.
@@ -108,10 +78,10 @@ type PromoRedemptionResponse struct {
 	CreatedAt      time.Time             `json:"created_at"`
 	DiscountAmount int64                 `json:"discount_amount"`
 	Id             openapi_types.UUID    `json:"id"`
-	OrderId        uint64                `json:"order_id"`
+	OrderId        openapi_types.UUID    `json:"order_id"`
 	PromotionId    openapi_types.UUID    `json:"promotion_id"`
 	Status         PromoRedemptionStatus `json:"status"`
-	UserId         uint64                `json:"user_id"`
+	UserId         openapi_types.UUID    `json:"user_id"`
 }
 
 // PromoRedemptionStatus defines model for PromoRedemptionStatus.
@@ -126,7 +96,7 @@ type PromotionResponse struct {
 	DiscountValue int                   `json:"discount_value"`
 	ExpiresAt     time.Time             `json:"expires_at"`
 	Id            openapi_types.UUID    `json:"id"`
-	MaxDiscount   int                   `json:"max_discount"`
+	MaxDiscount   int32                 `json:"max_discount"`
 	MaxUses       int64                 `json:"max_uses"`
 	Name          string                `json:"name"`
 	StartsAt      time.Time             `json:"starts_at"`
@@ -139,44 +109,13 @@ type PromotionStatus string
 
 // ReservePromoRequest defines model for ReservePromoRequest.
 type ReservePromoRequest struct {
-	Code    string `json:"code"`
-	OrderId uint64 `json:"order_id"`
-	UserId  uint64 `json:"user_id"`
-}
-
-// UpdateOrderRequest defines model for UpdateOrderRequest.
-type UpdateOrderRequest struct {
-	Status      string  `json:"status"`
-	TotalAmount float32 `json:"total_amount"`
+	Code    string             `json:"code"`
+	OrderId openapi_types.UUID `json:"order_id"`
+	UserId  openapi_types.UUID `json:"user_id"`
 }
 
 // UpdatePromotionRequest defines model for UpdatePromotionRequest.
-type UpdatePromotionRequest struct {
-	DiscountType  PromotionDiscountType `json:"discount_type"`
-	DiscountValue int                   `json:"discount_value"`
-	ExpiresAt     time.Time             `json:"expires_at"`
-	MaxDiscount   int                   `json:"max_discount"`
-	MaxUses       int64                 `json:"max_uses"`
-	Name          string                `json:"name"`
-	StartsAt      time.Time             `json:"starts_at"`
-	Status        PromotionStatus       `json:"status"`
-}
-
-// UpdateUserRequest defines model for UpdateUserRequest.
-type UpdateUserRequest struct {
-	Email openapi_types.Email `json:"email"`
-	Name  string              `json:"name"`
-}
-
-// UserResponse defines model for UserResponse.
-type UserResponse struct {
-	Email openapi_types.Email `json:"email"`
-	Id    uint64              `json:"id"`
-	Name  string              `json:"name"`
-}
-
-// UuidId defines model for UuidId.
-type UuidId = openapi_types.UUID
+type UpdatePromotionRequest = CreatePromotionRequest
 
 // BadRequestError defines model for BadRequestError.
 type BadRequestError = ErrorResponse
@@ -189,22 +128,17 @@ type NotFoundError = ErrorResponse
 
 // GetPromoCodesParams defines parameters for GetPromoCodes.
 type GetPromoCodesParams struct {
+	// PromotionId Filter promo codes by promotion UUID
 	PromotionId *openapi_types.UUID `form:"promotion_id,omitempty" json:"promotion_id,omitempty"`
 }
 
 // GetPromoRedemptionsParams defines parameters for GetPromoRedemptions.
 type GetPromoRedemptionsParams struct {
-	UserId      *uint64                `form:"user_id,omitempty" json:"user_id,omitempty"`
+	UserId      *openapi_types.UUID    `form:"user_id,omitempty" json:"user_id,omitempty"`
 	PromotionId *openapi_types.UUID    `form:"promotion_id,omitempty" json:"promotion_id,omitempty"`
-	OrderId     *uint64                `form:"order_id,omitempty" json:"order_id,omitempty"`
+	OrderId     *openapi_types.UUID    `form:"order_id,omitempty" json:"order_id,omitempty"`
 	Status      *PromoRedemptionStatus `form:"status,omitempty" json:"status,omitempty"`
 }
-
-// CreateOrderJSONRequestBody defines body for CreateOrder for application/json ContentType.
-type CreateOrderJSONRequestBody = CreateOrderRequest
-
-// UpdateOrderJSONRequestBody defines body for UpdateOrder for application/json ContentType.
-type UpdateOrderJSONRequestBody = UpdateOrderRequest
 
 // CreatePromoCodeJSONRequestBody defines body for CreatePromoCode for application/json ContentType.
 type CreatePromoCodeJSONRequestBody = CreatePromoCodeRequest
@@ -218,23 +152,8 @@ type CreatePromotionJSONRequestBody = CreatePromotionRequest
 // UpdatePromotionJSONRequestBody defines body for UpdatePromotion for application/json ContentType.
 type UpdatePromotionJSONRequestBody = UpdatePromotionRequest
 
-// CreateUserJSONRequestBody defines body for CreateUser for application/json ContentType.
-type CreateUserJSONRequestBody = CreateUserRequest
-
-// UpdateUserJSONRequestBody defines body for UpdateUser for application/json ContentType.
-type UpdateUserJSONRequestBody = UpdateUserRequest
-
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
-	// Get order list
-	// (GET /orders)
-	GetOrders(w http.ResponseWriter, r *http.Request)
-	// Create a new order
-	// (POST /orders)
-	CreateOrder(w http.ResponseWriter, r *http.Request)
-	// Update an existing order by ID
-	// (PUT /orders/{id})
-	UpdateOrder(w http.ResponseWriter, r *http.Request, id uint64)
 	// Get promo codes list
 	// (GET /promo-codes)
 	GetPromoCodes(w http.ResponseWriter, r *http.Request, params GetPromoCodesParams)
@@ -243,19 +162,19 @@ type ServerInterface interface {
 	CreatePromoCode(w http.ResponseWriter, r *http.Request)
 	// Get promo code by ID
 	// (GET /promo-codes/{id})
-	GetPromoCodeById(w http.ResponseWriter, r *http.Request, id UuidId)
+	GetPromoCodeById(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
 	// Get promo redemptions list
 	// (GET /promo-redemptions)
 	GetPromoRedemptions(w http.ResponseWriter, r *http.Request, params GetPromoRedemptionsParams)
-	// Reserve a promo code for an order
+	// Reserve promo code
 	// (POST /promo-redemptions/reserve)
 	ReservePromoCode(w http.ResponseWriter, r *http.Request)
-	// Confirm promo code redemption
+	// Redeem reserved promo code
 	// (POST /promo-redemptions/{id}/redeem)
-	RedeemPromoCode(w http.ResponseWriter, r *http.Request, id UuidId)
+	RedeemPromoCode(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
 	// Release reserved promo code
 	// (POST /promo-redemptions/{id}/release)
-	ReleasePromoCode(w http.ResponseWriter, r *http.Request, id UuidId)
+	ReleasePromoCode(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
 	// Get promotions list
 	// (GET /promotions)
 	GetPromotions(w http.ResponseWriter, r *http.Request)
@@ -264,45 +183,15 @@ type ServerInterface interface {
 	CreatePromotion(w http.ResponseWriter, r *http.Request)
 	// Get promotion by ID
 	// (GET /promotions/{id})
-	GetPromotionById(w http.ResponseWriter, r *http.Request, id UuidId)
+	GetPromotionById(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
 	// Update promotion
 	// (PUT /promotions/{id})
-	UpdatePromotion(w http.ResponseWriter, r *http.Request, id UuidId)
-	// Get user list
-	// (GET /users)
-	GetUsers(w http.ResponseWriter, r *http.Request)
-	// Create a new user
-	// (POST /users)
-	CreateUser(w http.ResponseWriter, r *http.Request)
-	// Get user by ID
-	// (GET /users/{id})
-	GetUserById(w http.ResponseWriter, r *http.Request, id uint64)
-	// Update an existing user by ID
-	// (PUT /users/{id})
-	UpdateUser(w http.ResponseWriter, r *http.Request, id uint64)
+	UpdatePromotion(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
 }
 
 // Unimplemented server implementation that returns http.StatusNotImplemented for each endpoint.
 
 type Unimplemented struct{}
-
-// Get order list
-// (GET /orders)
-func (_ Unimplemented) GetOrders(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusNotImplemented)
-}
-
-// Create a new order
-// (POST /orders)
-func (_ Unimplemented) CreateOrder(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusNotImplemented)
-}
-
-// Update an existing order by ID
-// (PUT /orders/{id})
-func (_ Unimplemented) UpdateOrder(w http.ResponseWriter, r *http.Request, id uint64) {
-	w.WriteHeader(http.StatusNotImplemented)
-}
 
 // Get promo codes list
 // (GET /promo-codes)
@@ -318,7 +207,7 @@ func (_ Unimplemented) CreatePromoCode(w http.ResponseWriter, r *http.Request) {
 
 // Get promo code by ID
 // (GET /promo-codes/{id})
-func (_ Unimplemented) GetPromoCodeById(w http.ResponseWriter, r *http.Request, id UuidId) {
+func (_ Unimplemented) GetPromoCodeById(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -328,21 +217,21 @@ func (_ Unimplemented) GetPromoRedemptions(w http.ResponseWriter, r *http.Reques
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
-// Reserve a promo code for an order
+// Reserve promo code
 // (POST /promo-redemptions/reserve)
 func (_ Unimplemented) ReservePromoCode(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
-// Confirm promo code redemption
+// Redeem reserved promo code
 // (POST /promo-redemptions/{id}/redeem)
-func (_ Unimplemented) RedeemPromoCode(w http.ResponseWriter, r *http.Request, id UuidId) {
+func (_ Unimplemented) RedeemPromoCode(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
 // Release reserved promo code
 // (POST /promo-redemptions/{id}/release)
-func (_ Unimplemented) ReleasePromoCode(w http.ResponseWriter, r *http.Request, id UuidId) {
+func (_ Unimplemented) ReleasePromoCode(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -360,37 +249,13 @@ func (_ Unimplemented) CreatePromotion(w http.ResponseWriter, r *http.Request) {
 
 // Get promotion by ID
 // (GET /promotions/{id})
-func (_ Unimplemented) GetPromotionById(w http.ResponseWriter, r *http.Request, id UuidId) {
+func (_ Unimplemented) GetPromotionById(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
 // Update promotion
 // (PUT /promotions/{id})
-func (_ Unimplemented) UpdatePromotion(w http.ResponseWriter, r *http.Request, id UuidId) {
-	w.WriteHeader(http.StatusNotImplemented)
-}
-
-// Get user list
-// (GET /users)
-func (_ Unimplemented) GetUsers(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusNotImplemented)
-}
-
-// Create a new user
-// (POST /users)
-func (_ Unimplemented) CreateUser(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusNotImplemented)
-}
-
-// Get user by ID
-// (GET /users/{id})
-func (_ Unimplemented) GetUserById(w http.ResponseWriter, r *http.Request, id uint64) {
-	w.WriteHeader(http.StatusNotImplemented)
-}
-
-// Update an existing user by ID
-// (PUT /users/{id})
-func (_ Unimplemented) UpdateUser(w http.ResponseWriter, r *http.Request, id uint64) {
+func (_ Unimplemented) UpdatePromotion(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -402,59 +267,6 @@ type ServerInterfaceWrapper struct {
 }
 
 type MiddlewareFunc func(http.Handler) http.Handler
-
-// GetOrders operation middleware
-func (siw *ServerInterfaceWrapper) GetOrders(w http.ResponseWriter, r *http.Request) {
-
-	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.GetOrders(w, r)
-	}))
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		handler = middleware(handler)
-	}
-
-	handler.ServeHTTP(w, r)
-}
-
-// CreateOrder operation middleware
-func (siw *ServerInterfaceWrapper) CreateOrder(w http.ResponseWriter, r *http.Request) {
-
-	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.CreateOrder(w, r)
-	}))
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		handler = middleware(handler)
-	}
-
-	handler.ServeHTTP(w, r)
-}
-
-// UpdateOrder operation middleware
-func (siw *ServerInterfaceWrapper) UpdateOrder(w http.ResponseWriter, r *http.Request) {
-
-	var err error
-
-	// ------------- Path parameter "id" -------------
-	var id uint64
-
-	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
-	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
-		return
-	}
-
-	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.UpdateOrder(w, r, id)
-	}))
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		handler = middleware(handler)
-	}
-
-	handler.ServeHTTP(w, r)
-}
 
 // GetPromoCodes operation middleware
 func (siw *ServerInterfaceWrapper) GetPromoCodes(w http.ResponseWriter, r *http.Request) {
@@ -503,7 +315,7 @@ func (siw *ServerInterfaceWrapper) GetPromoCodeById(w http.ResponseWriter, r *ht
 	var err error
 
 	// ------------- Path parameter "id" -------------
-	var id UuidId
+	var id openapi_types.UUID
 
 	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
 	if err != nil {
@@ -593,7 +405,7 @@ func (siw *ServerInterfaceWrapper) RedeemPromoCode(w http.ResponseWriter, r *htt
 	var err error
 
 	// ------------- Path parameter "id" -------------
-	var id UuidId
+	var id openapi_types.UUID
 
 	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
 	if err != nil {
@@ -618,7 +430,7 @@ func (siw *ServerInterfaceWrapper) ReleasePromoCode(w http.ResponseWriter, r *ht
 	var err error
 
 	// ------------- Path parameter "id" -------------
-	var id UuidId
+	var id openapi_types.UUID
 
 	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
 	if err != nil {
@@ -671,7 +483,7 @@ func (siw *ServerInterfaceWrapper) GetPromotionById(w http.ResponseWriter, r *ht
 	var err error
 
 	// ------------- Path parameter "id" -------------
-	var id UuidId
+	var id openapi_types.UUID
 
 	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
 	if err != nil {
@@ -696,7 +508,7 @@ func (siw *ServerInterfaceWrapper) UpdatePromotion(w http.ResponseWriter, r *htt
 	var err error
 
 	// ------------- Path parameter "id" -------------
-	var id UuidId
+	var id openapi_types.UUID
 
 	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
 	if err != nil {
@@ -706,84 +518,6 @@ func (siw *ServerInterfaceWrapper) UpdatePromotion(w http.ResponseWriter, r *htt
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.UpdatePromotion(w, r, id)
-	}))
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		handler = middleware(handler)
-	}
-
-	handler.ServeHTTP(w, r)
-}
-
-// GetUsers operation middleware
-func (siw *ServerInterfaceWrapper) GetUsers(w http.ResponseWriter, r *http.Request) {
-
-	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.GetUsers(w, r)
-	}))
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		handler = middleware(handler)
-	}
-
-	handler.ServeHTTP(w, r)
-}
-
-// CreateUser operation middleware
-func (siw *ServerInterfaceWrapper) CreateUser(w http.ResponseWriter, r *http.Request) {
-
-	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.CreateUser(w, r)
-	}))
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		handler = middleware(handler)
-	}
-
-	handler.ServeHTTP(w, r)
-}
-
-// GetUserById operation middleware
-func (siw *ServerInterfaceWrapper) GetUserById(w http.ResponseWriter, r *http.Request) {
-
-	var err error
-
-	// ------------- Path parameter "id" -------------
-	var id uint64
-
-	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
-	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
-		return
-	}
-
-	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.GetUserById(w, r, id)
-	}))
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		handler = middleware(handler)
-	}
-
-	handler.ServeHTTP(w, r)
-}
-
-// UpdateUser operation middleware
-func (siw *ServerInterfaceWrapper) UpdateUser(w http.ResponseWriter, r *http.Request) {
-
-	var err error
-
-	// ------------- Path parameter "id" -------------
-	var id uint64
-
-	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
-	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
-		return
-	}
-
-	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.UpdateUser(w, r, id)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -907,15 +641,6 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	}
 
 	r.Group(func(r chi.Router) {
-		r.Get(options.BaseURL+"/orders", wrapper.GetOrders)
-	})
-	r.Group(func(r chi.Router) {
-		r.Post(options.BaseURL+"/orders", wrapper.CreateOrder)
-	})
-	r.Group(func(r chi.Router) {
-		r.Put(options.BaseURL+"/orders/{id}", wrapper.UpdateOrder)
-	})
-	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/promo-codes", wrapper.GetPromoCodes)
 	})
 	r.Group(func(r chi.Router) {
@@ -948,18 +673,6 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	r.Group(func(r chi.Router) {
 		r.Put(options.BaseURL+"/promotions/{id}", wrapper.UpdatePromotion)
 	})
-	r.Group(func(r chi.Router) {
-		r.Get(options.BaseURL+"/users", wrapper.GetUsers)
-	})
-	r.Group(func(r chi.Router) {
-		r.Post(options.BaseURL+"/users", wrapper.CreateUser)
-	})
-	r.Group(func(r chi.Router) {
-		r.Get(options.BaseURL+"/users/{id}", wrapper.GetUserById)
-	})
-	r.Group(func(r chi.Router) {
-		r.Put(options.BaseURL+"/users/{id}", wrapper.UpdateUser)
-	})
 
 	return r
 }
@@ -967,40 +680,36 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
-	"HuLl1+XfAQAA//+inrP0RDsAAA==",
+	"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",
+	"tBvcZrl2I7O6W/0nAAD//yhjOZ6CLAAA",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

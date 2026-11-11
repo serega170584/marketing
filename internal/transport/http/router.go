@@ -1,9 +1,7 @@
 package http
 
 import (
-	"context"
 	"marketing/internal/config"
-	"marketing/internal/usecase"
 	"net/http"
 
 	"marketing/internal/infrastructure/database"
@@ -18,8 +16,6 @@ import (
 )
 
 type ApiServer struct {
-	*handler.UserHandler
-	*handler.OrderHandler
 	*handler.PromoCodeHandler
 	*handler.PromoRedemptionHandler
 	*handler.PromotionHandler
@@ -27,8 +23,6 @@ type ApiServer struct {
 
 //nolint:exhaustruct_v5
 func newRouter(
-	userHandler *handler.UserHandler,
-	orderHandler *handler.OrderHandler,
 	promoCodeHandler *handler.PromoCodeHandler,
 	promoRedemptionHandler *handler.PromoRedemptionHandler,
 	promotionHandler *handler.PromotionHandler,
@@ -54,8 +48,6 @@ func newRouter(
 	})
 
 	apiServer := &ApiServer{
-		UserHandler:            userHandler,
-		OrderHandler:           orderHandler,
 		PromoCodeHandler:       promoCodeHandler,
 		PromoRedemptionHandler: promoRedemptionHandler,
 		PromotionHandler:       promotionHandler,
@@ -68,18 +60,9 @@ func newRouter(
 }
 
 func GetRouter(
-	ctx context.Context,
 	pgConn *database.Postgres,
 	serviceCfg config.ServiceConfig,
-	userUseCase *usecase.UserUseCase,
 ) http.Handler {
-	userHandler := handler.NewUserHandler(
-		pgConn,
-		userUseCase,
-	)
-
-	orderHandler := handler.NewOrderHandler(pgConn)
-
 	promoCodeHandler := handler.NewPromoCodeHandler(pgConn)
 
 	promoRedemptionHandler := handler.NewPromoRedemptionHandler(pgConn)
@@ -87,8 +70,6 @@ func GetRouter(
 	promotionHandler := handler.NewPromotionHandler(pgConn)
 
 	return newRouter(
-		userHandler,
-		orderHandler,
 		promoCodeHandler,
 		promoRedemptionHandler,
 		promotionHandler,
