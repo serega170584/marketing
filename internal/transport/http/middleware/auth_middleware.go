@@ -58,18 +58,11 @@ func AuthMiddleware() func(http.Handler) http.Handler {
 
 			ctx := context.WithValue(
 				requestCtx,
-				claimsContextKey{},
+				auth.ClaimsContextKey{},
 				claims,
 			)
 
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
-}
-
-type claimsContextKey struct{}
-
-func GetClaims(ctx context.Context) (*auth.Claims, bool) {
-	claims, ok := ctx.Value(claimsContextKey{}).(*auth.Claims)
-	return claims, ok
 }

@@ -2,6 +2,8 @@ package handler
 
 import (
 	"encoding/json"
+	"marketing/internal/auth"
+	"marketing/internal/infrastructure/telemetry/logger"
 	"net/http"
 
 	"marketing/internal/infrastructure/database"
@@ -26,6 +28,33 @@ func (h *PromoCodeHandler) CreatePromoCode(
 	r *http.Request,
 ) {
 	var req api.CreatePromoCodeRequest
+
+	ctx := r.Context()
+
+	claims, ok := auth.GetClaims(r.Context())
+
+	if !ok {
+		logger.Error(ctx, "promo code claims not found")
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusForbidden)
+		_ = json.NewEncoder(w).Encode(api.ErrorResponse{
+			Error: "Forbidden",
+		})
+
+		return
+	}
+
+	if !claims.HasPermission(auth.PromoCodeCreatePermission) {
+		logger.Error(ctx, "promo code create permission not found")
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusForbidden)
+		_ = json.NewEncoder(w).Encode(api.ErrorResponse{
+			Error: "Forbidden",
+		})
+
+		return
+	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		w.Header().Set("Content-Type", "application/json")
@@ -54,6 +83,33 @@ func (h *PromoCodeHandler) GetPromoCodes(
 	r *http.Request,
 	params api.GetPromoCodesParams,
 ) {
+	ctx := r.Context()
+
+	claims, ok := auth.GetClaims(r.Context())
+
+	if !ok {
+		logger.Error(ctx, "promo code claims not found")
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusForbidden)
+		_ = json.NewEncoder(w).Encode(api.ErrorResponse{
+			Error: "Forbidden",
+		})
+
+		return
+	}
+
+	if !claims.HasPermission(auth.PromoCodeViewPermission) {
+		logger.Error(ctx, "promo code view permission not found")
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusForbidden)
+		_ = json.NewEncoder(w).Encode(api.ErrorResponse{
+			Error: "Forbidden",
+		})
+
+		return
+	}
+
 	codes := []api.PromoCodeResponse{
 		{
 			Id:             uuid.MustParse("22222222-2222-2222-2222-222222222222"),
@@ -73,6 +129,33 @@ func (h *PromoCodeHandler) GetPromoCodeById(
 	r *http.Request,
 	id openapi_types.UUID,
 ) {
+	ctx := r.Context()
+
+	claims, ok := auth.GetClaims(r.Context())
+
+	if !ok {
+		logger.Error(ctx, "promo code claims not found")
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusForbidden)
+		_ = json.NewEncoder(w).Encode(api.ErrorResponse{
+			Error: "Forbidden",
+		})
+
+		return
+	}
+
+	if !claims.HasPermission(auth.PromoCodeViewPermission) {
+		logger.Error(ctx, "promo code view permission not found")
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusForbidden)
+		_ = json.NewEncoder(w).Encode(api.ErrorResponse{
+			Error: "Forbidden",
+		})
+
+		return
+	}
+
 	if id != uuid.MustParse("22222222-2222-2222-2222-222222222222") {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusNotFound)
