@@ -24,34 +24,32 @@ func NewPromoCodeRepo(
 func (r PromoCodeRepo) CreatePromoCode(
 	ctx context.Context,
 	promoCodeDTO dto.PromoCode,
-) (
-	*uuid.UUID,
-	error,
-) {
+) (*uuid.UUID, error) {
 	pool := r.postgres.Pool()
 
+	id := uuid.New()
+
 	query := `
-        UPDATE promo_codes
-        SET
-            code = $1,
-            promotion_id = $2,
-            max_uses_per_user = $3
-        WHERE id = $4
+        INSERT INTO promo_codes (
+            id,
+            code,
+            promotion_id,
+            max_uses_per_user
+        )
+        VALUES ($1, $2, $3, $4)
         RETURNING id
     `
-
-	var id uuid.UUID
 
 	err := pool.QueryRow(
 		ctx,
 		query,
+		id,
 		promoCodeDTO.Code,
 		promoCodeDTO.PromotionID,
 		promoCodeDTO.MaxUsesPerUser,
-		promoCodeDTO.ID,
 	).Scan(&id)
 	if err != nil {
-		return nil, fmt.Errorf("failed to update promo code: %w", err)
+		return nil, fmt.Errorf("failed to create promo code: %w", err)
 	}
 
 	return &id, nil
