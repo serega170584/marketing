@@ -2,6 +2,7 @@ package http
 
 import (
 	"marketing/internal/config"
+	"marketing/internal/usecase"
 	"net/http"
 
 	"marketing/internal/infrastructure/database"
@@ -61,9 +62,10 @@ func newRouter(
 
 func GetRouter(
 	pgConn *database.Postgres,
+	promoCodeUseCase *usecase.PromoCodeUseCase,
 	serviceCfg config.ServiceConfig,
 ) http.Handler {
-	promoCodeHandler := handler.NewPromoCodeHandler(pgConn)
+	promoCodeHandler := handler.NewPromoCodeHandler(promoCodeUseCase)
 
 	promoRedemptionHandler := handler.NewPromoRedemptionHandler(pgConn)
 

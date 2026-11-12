@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"marketing/internal/auth"
 	"marketing/internal/infrastructure/telemetry/logger"
+	"marketing/internal/usecase"
 	"net/http"
 
-	"marketing/internal/infrastructure/database"
 	"marketing/internal/transport/http/api"
 
 	"github.com/google/uuid"
@@ -14,12 +14,14 @@ import (
 )
 
 type PromoCodeHandler struct {
-	pgConn *database.Postgres
+	promoCodeUseCase *usecase.PromoCodeUseCase
 }
 
-func NewPromoCodeHandler(pgConn *database.Postgres) *PromoCodeHandler {
+func NewPromoCodeHandler(
+	promoCodeUseCase *usecase.PromoCodeUseCase,
+) *PromoCodeHandler {
 	return &PromoCodeHandler{
-		pgConn: pgConn,
+		promoCodeUseCase: promoCodeUseCase,
 	}
 }
 

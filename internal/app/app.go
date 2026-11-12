@@ -9,6 +9,9 @@ import (
 	"marketing/internal/infrastructure/database"
 	"marketing/internal/infrastructure/telemetry"
 	"marketing/internal/infrastructure/telemetry/logger"
+	"marketing/internal/repository"
+	"marketing/internal/service"
+	"marketing/internal/usecase"
 	"net/http"
 	"os"
 	"os/signal"
@@ -75,8 +78,13 @@ func NewApp(
 		return nil, fmt.Errorf("metrics init failed: %w", err)
 	}
 
+	promoCodeRepo := repository.NewPromoCodeRepo(pgConn)
+	promoCodeService := service.NewPromoCodeService(promoCodeRepo)
+	promoCodeUseCase := usecase.NewPromoCodeUseCase(promoCodeService)
+
 	router := transportHTTP.GetRouter(
 		pgConn,
+		promoCodeUseCase,
 		cfg.Service,
 	)
 
