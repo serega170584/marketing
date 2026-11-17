@@ -72,10 +72,7 @@ func GenerateJWT(privateKey *ecdsa.PrivateKey) (
 		"iss": "marketing-api",
 		"exp": time.Now().Add(15 * time.Minute).Unix(),
 		"permissions": []string{
-			"users:read",
-			"users:create",
-			"users:update",
-			"orders:read",
+			"promo_code:create",
 		},
 	}
 

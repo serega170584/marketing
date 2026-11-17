@@ -8,6 +8,8 @@ import (
 	"strings"
 )
 
+const marketingAPIIssuer = "marketing-api"
+
 func AuthMiddleware() func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(
@@ -50,6 +52,16 @@ func AuthMiddleware() func(http.Handler) http.Handler {
 				http.Error(
 					w,
 					"Invalid token",
+					http.StatusUnauthorized,
+				)
+
+				return
+			}
+
+			if claims.Issuer != marketingAPIIssuer {
+				http.Error(
+					w,
+					"Invalid issuer",
 					http.StatusUnauthorized,
 				)
 
