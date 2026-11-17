@@ -25,6 +25,8 @@ func (r PromoCodeRepo) CreatePromoCode(
 	ctx context.Context,
 	promoCodeDTO dto.PromoCode,
 ) (*uuid.UUID, error) {
+	promocode := mapPromoCode(promoCodeDTO)
+
 	pool := r.postgres.Pool()
 
 	id := uuid.New()
@@ -44,9 +46,9 @@ func (r PromoCodeRepo) CreatePromoCode(
 		ctx,
 		query,
 		id,
-		promoCodeDTO.Code,
-		promoCodeDTO.PromotionID,
-		promoCodeDTO.MaxUsesPerUser,
+		promocode.Code,
+		promocode.PromotionID,
+		promocode.MaxUsesPerUser,
 	).Scan(&id)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create promo code: %w", err)

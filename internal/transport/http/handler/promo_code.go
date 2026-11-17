@@ -68,8 +68,23 @@ func (h *PromoCodeHandler) CreatePromoCode(
 		return
 	}
 
+	promoCodeUUID, err := h.promoCodeUseCase.CreatePromoCode(
+		ctx,
+		mapPromocodeRequest(req),
+	)
+	if err != nil {
+		logger.Error(ctx, "promo code create failed", logger.ErrorField(err))
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		_ = json.NewEncoder(w).Encode(api.ErrorResponse{
+			Error: "Internal server error",
+		})
+
+		return
+	}
+
 	response := api.PromoCodeResponse{
-		Id:             uuid.New(),
+		Id:             *promoCodeUUID,
 		Code:           req.Code,
 		PromotionId:    req.PromotionId,
 		MaxUsesPerUser: req.MaxUsesPerUser,
